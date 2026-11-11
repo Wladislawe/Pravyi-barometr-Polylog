@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1220">
+  <title>Правый барометр — рейтинги партий Европы</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <style>
+    :root {
+      --bg:#0b1220; --panel:#111c2f; --panel2:#17243a; --line:#263650;
+      --text:#edf3fc; --muted:#9aabc3; --accent:#f04b27; --blue:#4ba8ff;
+      --cyan:#39d3c5; --white:#f3f6fb; --danger:#ff8275;
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0; background:var(--bg); color:var(--text);
+      font:15px/1.45 Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial, sans-serif;
+    }
+    .topbar {
+      padding:22px 28px 18px; border-bottom:1px solid var(--line);
+      display:flex; align-items:center; justify-content:space-between; gap:16px;
+      background:#0d1728;
+    }
+    .brand { font-size:18px; font-weight:850; letter-spacing:.07em; text-transform:uppercase; }
+    .brand span { color:var(--accent); }
+    .topmeta { color:var(--muted); font-size:12px; text-align:right; }
+    .layout { display:grid; grid-template-columns:285px minmax(0,1fr); min-height:calc(100vh - 68px); }
+    aside { border-right:1px solid var(--line); padding:20px 16px; background:#0e192b; }
+    .section-label { color:#b9c7db; font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; margin:0 0 12px; }
+    .search {
+      width:100%; padding:11px 12px; border:1px solid #30425e; border-radius:9px;
+      background:#111e33; color:var(--text); outline:none; margin-bottom:14px;
+    }
+    .country-list { display:flex; flex-direction:column; gap:5px; }
+    .country {
+      display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+      padding:10px 11px; border:1px solid transparent; border-radius:9px;
+      background:transparent; color:#dce6f4; cursor:pointer; font:inherit;
+    }
+    .country:hover { background:#17253c; }
+    .country.active { background:#1b2b45; border-color:#3b5275; color:#fff; }
+    .flag { width:25px; font-size:18px; }
+    .country-name { flex:1; }
+    .count { color:#91a4bf; font-size:11px; }
+    main { padding:26px clamp(16px,3vw,42px) 40px; min-width:0; }
+    .heading-row { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; flex-wrap:wrap; }
+    h1 { margin:0; font-size:clamp(22px,3vw,34px); line-height:1.12; letter-spacing:-.025em; }
+    .subtitle { color:var(--muted); margin-top:8px; font-size:13px; }
+    .controls { display:flex; align-items:center; gap:9px; flex-wrap:wrap; }
+    select, .action {
+      border:1px solid #344866; background:#15233a; color:var(--text);
+      padding:10px 12px; border-radius:9px; font:inherit; font-size:13px;
+    }
+    select { min-width:190px; }
+    .action { cursor:pointer; }
+    .action:hover { background:#20324e; }
+    .status { margin:18px 0 16px; padding:11px 13px; border:1px solid var(--line); border-radius:9px; color:var(--muted); background:#101b2d; font-size:12px; }
+    .status.error { border-color:#7a3b3b; color:#ffc0b9; }
+    .metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin:16px 0; }
+    .metric { background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:15px 16px; min-width:0; }
+    .metric-label { color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.08em; }
+    .metric-value { font-size:clamp(23px,3vw,32px); font-weight:850; margin-top:6px; letter-spacing:-.03em; }
+    .metric-note { color:#8fa2bd; font-size:11px; margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .chart-panel { border:1px solid var(--line); background:var(--panel); border-radius:13px; overflow:hidden; }
+    .chart-head { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:15px 18px; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+    .chart-title { font-size:14px; font-weight:800; }
+    .chart-hint { color:var(--muted); font-size:11px; }
+    #chart { width:100%; height:490px; }
+    .footnote { margin:12px 2px 0; color:#8194af; font-size:11px; }
+    .empty { display:flex; align-items:center; justify-content:center; min-height:390px; padding:30px; color:var(--muted); text-align:center; }
+    .footer { margin-top:24px; padding-top:15px; border-top:1px solid var(--line); color:#7f91aa; font-size:11px; display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+    @media(max-width:850px) {
+      .layout { grid-template-columns:1fr; }
+      aside { border-right:0; border-bottom:1px solid var(--line); padding:14px 16px; }
+      .country-list { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); }
+      .country { padding:8px; font-size:12px; }
+      .count { display:none; }
+      main { padding-top:20px; }
+      #chart { height:420px; }
+    }
+    @media(max-width:560px) {
+      .topbar { padding:16px; align-items:flex-start; }
+      .topmeta { max-width:130px; }
+      .country-list { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .metrics { grid-template-columns:1fr 1fr; }
+      .metric:last-child { grid-column:1 / -1; }
+      #chart { height:390px; }
+      select { min-width:0; flex:1; }
+      .controls { width:100%; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span>●</span> Правый барометр</div>
+    <div class="topmeta">ПОЛИЛОГ. ЭКСПЕРТИЗА<br>Интерактивные рейтинги партий Европы</div>
+  </header>
+
+  <div class="layout">
+    <aside>
+      <div class="section-label">Страны мониторинга</div>
+      <input id="countrySearch" class="search" type="search" placeholder="Поиск по стране…">
+      <div id="countryList" class="country-list"></div>
+    </aside>
+
+    <main>
+      <div class="heading-row">
+        <div>
+          <h1 id="pageTitle">Рейтинги правых партий</h1>
+          <div class="subtitle" id="pageSubtitle">Выберите страну и партию, чтобы посмотреть динамику</div>
+        </div>
+        <div class="controls">
+          <select id="partySelect" aria-label="Выберите партию" disabled>
+            <option>Загрузка данных…</option>
+          </select>
+          <button id="refresh" class="action">↻ Обновить</button>
+        </div>
+      </div>
+
+      <div id="status" class="status">Подключаемся к Google Sheets…</div>
+
+      <section class="metrics">
+        <div class="metric">
+          <div class="metric-label">Рейтинг партии</div>
+          <div class="metric-value" id="partyValue">—</div>
+          <div class="metric-note" id="partyName">—</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Рейтинг конкурента</div>
+          <div class="metric-value" id="competitorValue">—</div>
+          <div class="metric-note" id="competitorName">Крупнейший конкурент</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Отрыв</div>
+          <div class="metric-value" id="gapValue">—</div>
+          <div class="metric-note">Рейтинг партии минус рейтинг конкурента</div>
+        </div>
+      </section>
+
+      <section class="chart-panel">
+        <div class="chart-head">
+          <div class="chart-title" id="chartTitle">Динамика электоральной поддержки</div>
+          <div class="chart-hint">Наведение — значения · Колесо мыши — масштаб · Перетаскивание — панорама</div>
+        </div>
+        <div id="chart"><div class="empty">График появится после загрузки данных.</div></div>
+      </section>
+
+      <div class="footnote">Источник: агрегированные электоральные рейтинги. Отрыв рассчитывается как разница между рейтингом партии и рейтингом её крупнейшего конкурента. Значения отображаются в процентах.</div>
+      <div class="footer">
+        <span>«Правый барометр» · Полилог.Экспертиза</span>
+        <span id="updatedAt">Данные не загружены</span>
+      </div>
+    </main>
+  </div>
+
+<script>
+/*
+  ПОДКЛЮЧЕНИЕ GOOGLE SHEETS:
+  1. Опубликуйте нужную вкладку Google Sheets в интернете в формате CSV.
+  2. Вставьте полученную ссылку вместо PUBLISHED_CSV_URL ниже.
+  3. Не публикуйте всю книгу, если в других вкладках есть служебные данные.
+*/
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR71VbBZh1Sr4R-yJKms30GvlFBgc38a6Xj-8K4eFCmEs3t50nTRPeeMejOUN6oZn4phLcNiD8GpMXO/pub?gid=290729289&single=true&output=tsv";
+const REFRESH_EVERY_MINUTES = 10;
+
+const COUNTRIES = [
+  { key:"Австрия", flag:"🇦🇹", aliases:["австрия","austria"] },
+  { key:"Бельгия", flag:"🇧🇪", aliases:["бельгия","belgium"] },
+  { key:"Великобритания", flag:"🇬🇧", aliases:["великобритания","соединенное королевство","united kingdom","uk","great britain"] },
+  { key:"Германия", flag:"🇩🇪", aliases:["германия","germany"] },
+  { key:"Дания", flag:"🇩🇰", aliases:["дания","denmark"] },
+  { key:"Испания", flag:"🇪🇸", aliases:["испания","spain"] },
+  { key:"Италия", flag:"🇮🇹", aliases:["италия","italy"] },
+  { key:"Нидерланды", flag:"🇳🇱", aliases:["нидерланды","голландия","netherlands","the netherlands"] },
+  { key:"Норвегия", flag:"🇳🇴", aliases:["норвегия","norway"] },
+  { key:"Португалия", flag:"🇵🇹", aliases:["португалия","portugal"] },
+  { key:"Франция", flag:"🇫🇷", aliases:["франция","france"] },
+  { key:"Швеция", flag:"🇸🇪", aliases:["швеция","sweden"] }
+];
+
+const PARTY_ALIASES = {
+  "fpo":"FPÖ", "fpö":"FPÖ", "freedom party of austria":"FPÖ",
+  "vb":"VB", "vlaams belang":"VB",
+  "reform":"Reform UK", "reform uk":"Reform UK",
+  "afd":"AfD", "af d":"AfD",
+  "df":"DF", "danish people's party":"DF",
+  "dd":"DD",
+  "vox":"Vox",
+  "fdi":"FdI", "fratelli d'italia":"FdI",
+  "lega":"Lega",
+  "pvv":"PVV", "fvd":"FvD",
+  "frp":"FrP",
+  "chega":"Chega",
+  "rn":"RN", "rassemblement national":"RN",
+  "sd":"SD", "sweden democrats":"SD"
+};
+
+let allRows = [];
+let selectedCountry = "";
+let selectedParty = "";
+
+const $ = id => document.getElementById(id);
+
+function norm(s) {
+  return String(s ?? "").trim().toLowerCase()
+    .replaceAll("ё","е").replace(/\s+/g," ")
+    .replace(/[’‘`]/g,"'");
+}
+function normalizeCountry(raw) {
+  const value = norm(raw);
+  return COUNTRIES.find(c => c.aliases.some(a => norm(a) === value))?.key || String(raw || "").trim();
+}
+function canonicalParty(raw) {
+  const v = norm(raw);
+  return PARTY_ALIASES[v] || String(raw || "").trim();
+}
+function parseNumber(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const cleaned = String(value).replace(/\s/g,"").replace("%","").replace(",",".");
+  const n = Number(cleaned);
+  return Number.isFinite(n) ? n : null;
+}
+function parseDate(value) {
+  const s = String(value ?? "").trim();
+  if (!s) return null;
+  let m = s.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);
+  if (m) return new Date(Number(m[3]), Number(m[2])-1, Number(m[1]));
+  m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]));
+  const d = new Date(s);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+function headerIndex(headers, candidates, exclude=[]) {
+  const hs = headers.map(h => norm(h));
+  for (const candidate of candidates) {
+    const exact = hs.findIndex(h => h === norm(candidate) && !exclude.some(x => h.includes(norm(x))));
+    if (exact >= 0) return exact;
+  }
+  for (const candidate of candidates) {
+    const partial = hs.findIndex(h => h.includes(norm(candidate)) && !exclude.some(x => h.includes(norm(x))));
+    if (partial >= 0) return partial;
+  }
+  return -1;
+}
+function transformRows(data) {
+  if (!data.length) throw new Error("CSV пустой.");
+  const headers = Object.keys(data[0]);
+  const dateI = headerIndex(headers, ["дата","date"]);
+  const countryI = headerIndex(headers, ["страна","country"]);
+  const partyI = headerIndex(headers, ["партия","party"]);
+  const ratingI = headerIndex(headers, ["рейтинг партии","rating party","рейтинг","rating"], ["конкурент"]);
+  const competitorRatingI = headerIndex(headers, ["рейтинг конкурента","competitor rating","rating competitor"]);
+  const competitorNameI = headerIndex(headers, ["конкурент","партия конкурента","название конкурента","competitor party","competitor name"]);
+  if ([dateI,countryI,partyI,ratingI,competitorRatingI].some(i => i < 0)) {
+    throw new Error("Не удалось распознать столбцы. Нужны: Дата, Страна, Партия, Рейтинг, Рейтинг конкурента. Получены: " + headers.join(" · "));
+  }
+  return data.map(obj => {
+    const vals = headers.map(h => obj[h]);
+    const date = parseDate(vals[dateI]);
+    const rating = parseNumber(vals[ratingI]);
+    const competitorRating = parseNumber(vals[competitorRatingI]);
+    if (!date || rating === null || competitorRating === null) return null;
+    const rawCountry = vals[countryI];
+    const rawParty = vals[partyI];
+    return {
+      date, country:normalizeCountry(rawCountry), party:canonicalParty(rawParty),
+      rawParty:String(rawParty || "").trim(),
+      rating, competitorRating,
+      competitor:competitorNameI >= 0 ? String(vals[competitorNameI] || "").trim() : ""
+    };
+  }).filter(Boolean).sort((a,b)=>a.date-b.date);
+}
+function setStatus(message, isError=false) {
+  $("status").textContent = message;
+  $("status").classList.toggle("error", isError);
+}
+async function loadData() {
+  if (!CSV_URL || CSV_URL === "PUBLISHED_CSV_URL") {
+    setStatus("Нужно опубликовать вкладку Google Sheets в формате CSV и вставить ссылку в переменную CSV_URL в index.html.", true);
+    return;
+  }
+  $("refresh").disabled = true;
+  setStatus("Загружаем данные из Google Sheets…");
+  try {
+    const response = await fetch(CSV_URL + (CSV_URL.includes("?") ? "&" : "?") + "cacheBust=" + Date.now());
+    if (!response.ok) throw new Error("Google Sheets вернул HTTP " + response.status);
+    const csv = await response.text();
+    const parsed = Papa.parse(csv, {header: true, skipEmptyLines: true, delimiter: "\t"});
+    if (parsed.errors?.length && !parsed.data.length) throw new Error("Не удалось прочитать CSV.");
+    allRows = transformRows(parsed.data);
+    if (!allRows.length) throw new Error("В таблице не найдено строк с корректными датами и рейтингами.");
+    const countries = [...new Set(allRows.map(r=>r.country))];
+    if (!selectedCountry || !countries.includes(selectedCountry)) selectedCountry = COUNTRIES.find(c=>countries.includes(c.key))?.key || countries[0];
+    renderCountries();
+    renderPartyOptions();
+    renderChart();
+    const latest = allRows[allRows.length-1].date;
+    setStatus(`Загружено ${allRows.length} наблюдений · последняя дата: ${formatDate(latest)}`);
+    $("updatedAt").textContent = "Обновлено: " + new Date().toLocaleString("ru-RU");
+  } catch (err) {
+    setStatus("Ошибка загрузки: " + err.message + ". Проверьте публикацию вкладки и доступность CSV-ссылки.", true);
+    $("chart").innerHTML = '<div class="empty">Не удалось загрузить данные. Проверьте CSV-ссылку и названия столбцов.</div>';
+  } finally {
+    $("refresh").disabled = false;
+  }
+}
+function formatDate(d) {
+  return d.toLocaleDateString("ru-RU", {day:"2-digit",month:"2-digit",year:"numeric"});
+}
+function formatValue(v) {
+  return v === null || v === undefined ? "—" : v.toLocaleString("ru-RU",{maximumFractionDigits:1}) + "%";
+}
+function getCountryMeta(name) {
+  return COUNTRIES.find(c=>c.key===name) || {flag:"🌍",key:name};
+}
+function renderCountries() {
+  const search = norm($("countrySearch").value);
+  const counts = {};
+  allRows.forEach(r=>counts[r.country]=(counts[r.country]||0)+1);
+  const available = COUNTRIES.filter(c=>counts[c.key]).concat(
+    [...new Set(allRows.map(r=>r.country))].filter(c=>!COUNTRIES.some(x=>x.key===c)).map(key=>({key,flag:"🌍"}))
+  );
+  $("countryList").innerHTML = "";
+  available.filter(c=>!search || norm(c.key).includes(search)).forEach(c=>{
+    const b = document.createElement("button");
+    b.className = "country" + (c.key===selectedCountry ? " active" : "");
+    b.innerHTML = `<span class="flag">${c.flag}</span><span class="country-name"></span><span class="count">${counts[c.key]} зам.</span>`;
+    b.querySelector(".country-name").textContent = c.key;
+    b.onclick = ()=>{selectedCountry=c.key; renderCountries(); renderPartyOptions(); renderChart();};
+    $("countryList").appendChild(b);
+  });
+}
+function renderPartyOptions() {
+  const rows = allRows.filter(r=>r.country===selectedCountry);
+  const parties = [...new Set(rows.map(r=>r.party))];
+  $("partySelect").innerHTML = "";
+  parties.forEach(p=>{
+    const option=document.createElement("option"); option.value=p; option.textContent=p;
+    $("partySelect").appendChild(option);
+  });
+  $("partySelect").disabled = !parties.length;
+  if (!parties.includes(selectedParty)) selectedParty = parties[0] || "";
+  $("partySelect").value = selectedParty;
+  $("pageTitle").textContent = selectedCountry || "Рейтинги правых партий";
+  $("pageSubtitle").textContent = parties.length > 1 ? "Выберите партию, чтобы посмотреть её динамику и положение относительно конкурента" : "Динамика электоральной поддержки и положение относительно конкурента";
+}
+function renderChart() {
+  const rows = allRows.filter(r=>r.country===selectedCountry && r.party===selectedParty);
+  if (!rows.length) {
+    $("chart").innerHTML = '<div class="empty">Для выбранной партии пока нет наблюдений.</div>';
+    return;
+  }
+  rows.sort((a,b)=>a.date-b.date);
+  const latest=rows[rows.length-1];
+  const competitorLabel=latest.competitor || "Крупнейший конкурент";
+  $("partyValue").textContent=formatValue(latest.rating);
+  $("partyName").textContent=latest.party;
+  $("competitorValue").textContent=formatValue(latest.competitorRating);
+  $("competitorName").textContent=competitorLabel;
+  const gap=latest.rating-latest.competitorRating;
+  $("gapValue").textContent=(gap>0?"+":"")+gap.toLocaleString("ru-RU",{maximumFractionDigits:1})+" п. п.";
+  $("gapValue").style.color=gap>0?"#62d7b0":gap<0?"#ff907e":"#edf3fc";
+  $("chartTitle").textContent=`${latest.party} и ${competitorLabel} · динамика рейтингов`;
+  const dates=rows.map(r=>r.date);
+  const partyTrace={
+    x:dates,y:rows.map(r=>r.rating),type:"scatter",mode:"lines+markers",name:latest.party,
+    line:{color:"#4ba8ff",width:3},marker:{size:7,color:"#4ba8ff"},
+    hovertemplate:"%{x|%d.%m.%Y}<br>"+latest.party+": %{y:.1f}%<extra></extra>"
+  };
+  const competitorTrace={
+    x:dates,y:rows.map(r=>r.competitorRating),type:"scatter",mode:"lines+markers",name:competitorLabel,
+    line:{color:"#f04b27",width:3},marker:{size:7,color:"#f04b27"},
+    hovertemplate:"%{x|%d.%m.%Y}<br>"+competitorLabel+": %{y:.1f}%<extra></extra>"
+  };
+  const layout={
+    paper_bgcolor:"#111c2f",plot_bgcolor:"#111c2f",font:{color:"#dce6f4",family:"Inter, Arial, sans-serif"},
+    margin:{l:55,r:25,t:28,b:55},hovermode:"x unified",
+    xaxis:{showgrid:false,zeroline:false,color:"#a9bad0",tickformat:"%d.%m.%y",rangeslider:{visible:true,thickness:.08},type:"date"},
+    yaxis:{title:"Рейтинг, %",gridcolor:"#293b55",zeroline:false,color:"#a9bad0",ticksuffix:"%",rangemode:"tozero"},
+    legend:{orientation:"h",y:1.12,x:0,font:{size:12}},
+    hoverlabel:{bgcolor:"#1c2b43",bordercolor:"#425977",font:{color:"#fff"}}
+  };
+  Plotly.react("chart",[partyTrace,competitorTrace],layout,{responsive:true,displaylogo:false,scrollZoom:true});
+}
+$("partySelect").addEventListener("change",e=>{selectedParty=e.target.value;renderChart();});
+$("countrySearch").addEventListener("input",renderCountries);
+$("refresh").addEventListener("click",loadData);
+loadData();
+setInterval(loadData, REFRESH_EVERY_MINUTES*60*1000);
+</script>
+</body>
+</html>
