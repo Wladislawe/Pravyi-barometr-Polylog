@@ -21,17 +21,26 @@
     button{color:inherit}
     .hidden{display:none!important}
     .muted{color:var(--muted)}
-    .eyebrow{font-size:10px;font-weight:850;letter-spacing:.14em;text-transform:uppercase;color:#b8b8c0}
 
     /* Стартовый выбор формата */
-    .welcome{position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at 50% 0%,#242429 0%,#101013 42%,#09090b 100%)}
-    .welcome-card{width:min(860px,100%);border:1px solid #36363d;background:rgba(19,19,22,.96);border-radius:24px;padding:clamp(24px,5vw,48px);box-shadow:var(--shadow)}
+    .welcome{
+      position:fixed;inset:0;z-index:1000;display:flex;justify-content:center;align-items:flex-start;
+      overflow-y:auto;overscroll-behavior:contain;padding:24px;
+      background:radial-gradient(ellipse at 50% 0%,#242429 0%,#101013 42%,#09090b 100%);
+    }
+    .welcome-card{
+      width:min(860px,100%);margin:auto;border:1px solid #36363d;background:rgba(19,19,22,.96);
+      border-radius:24px;padding:clamp(24px,5vw,48px);box-shadow:var(--shadow);
+    }
     .welcome-brand{font-size:13px;font-weight:900;letter-spacing:.15em;text-transform:uppercase;color:#fff}
     .welcome-brand span{color:var(--accent)}
     .welcome h1{font-size:clamp(30px,5vw,48px);line-height:1.02;letter-spacing:-.045em;margin:22px 0 12px}
     .welcome-lead{max-width:570px;color:#b8b8c0;font-size:15px;margin:0 0 28px}
     .mode-options{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-    .mode-option{border:1px solid #3a3a42;border-radius:17px;background:#19191d;padding:20px;text-align:left;cursor:pointer;transition:.18s ease;min-width:0}
+    .mode-option{
+      border:1px solid #3a3a42;border-radius:17px;background:#19191d;padding:20px;text-align:left;
+      cursor:pointer;transition:.18s ease;min-width:0;
+    }
     .mode-option:hover,.mode-option:focus-visible{border-color:#f04424;background:#202025;transform:translateY(-2px);outline:none}
     .mode-option.recommended{border-color:#6b382e}
     .mode-option-title{font-size:18px;font-weight:850;margin:15px 0 5px}
@@ -65,6 +74,7 @@
     .topmeta{text-align:right;font-size:10px;line-height:1.5;color:#8d8d96;letter-spacing:.1em;font-weight:800}
     .mode-switch,.refresh-btn{border:1px solid #3a3a41;background:#1a1a1f;border-radius:9px;padding:9px 12px;font-size:12px;font-weight:750;cursor:pointer;white-space:nowrap}
     .mode-switch:hover,.refresh-btn:hover{border-color:#777780;background:#222228}
+    .mode-switch:focus-visible,.refresh-btn:focus-visible,.country-btn:focus-visible,.mobile-country-btn:focus-visible{outline:2px solid #fff;outline-offset:2px}
     .layout{display:grid;grid-template-columns:260px minmax(0,1fr);min-height:calc(100vh - 72px)}
     .sidebar{background:#101013;border-right:1px solid #29292e;padding:22px 14px}
     .section-label{font-size:10px;font-weight:900;letter-spacing:.13em;color:#96969f;text-transform:uppercase;margin:0 8px 13px}
@@ -85,29 +95,31 @@
     .heading-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
     .country-pill{display:inline-flex;align-items:center;gap:9px;border:1px solid #38383f;background:#19191e;border-radius:10px;padding:9px 12px;font-size:12px;font-weight:800}
     .country-pill .flag{width:22px;height:15px}
-    .status{margin:0 0 17px;border:1px solid #303037;background:#151519;border-radius:10px;padding:10px 13px;font-size:11px;color:#a5a5ae;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
-    .status.error{border-color:#743a36;color:#ffb5a9}
-    .status.warn{border-color:#65502a;color:#e9ca82}
     .metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0 0 16px}
     .metric{min-width:0;background:#17171b;border:1px solid #303037;border-radius:13px;padding:15px 16px}
     .metric-label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#96969f;font-weight:850}
     .metric-value{font-size:clamp(21px,2.5vw,31px);font-weight:900;letter-spacing:-.035em;margin-top:7px;line-height:1.1;overflow-wrap:anywhere}
+    .metric-value.multiple{font-size:14px;letter-spacing:0;line-height:1.5}
     .metric-note{font-size:11px;color:#898992;margin-top:6px;min-height:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .gap-line{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
+    .gap-line span:first-child{color:#b8b8c0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .gap-line strong{white-space:nowrap}
     .chart-panel{background:#151518;border:1px solid #303037;border-radius:15px;overflow:hidden}
     .chart-head{padding:16px 18px 13px;border-bottom:1px solid #303037;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
     .chart-title{font-size:14px;font-weight:850}
     .chart-hint{font-size:10px;color:#888891}
     #chart{height:500px;width:100%;min-width:0}
     .empty{min-height:390px;display:grid;place-items:center;text-align:center;padding:30px;color:#92929b;font-size:13px}
+    .empty.error{color:#ff9b91}
     .legend-wrap{padding:14px 18px 17px;border-top:1px solid #303037;background:#121215}
+    .legend-section{margin-bottom:14px}
+    .legend-section:last-child{margin-bottom:0}
     .legend-section-title{font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:#85858e;font-weight:900;margin:0 0 9px}
-    .legend-items{display:flex;flex-wrap:wrap;gap:9px 18px;margin-bottom:13px}
-    .legend-items:last-child{margin-bottom:0}
+    .legend-items{display:flex;flex-wrap:wrap;gap:9px 18px}
     .legend-item{display:flex;align-items:center;gap:8px;min-width:0;max-width:100%}
     .legend-sample{width:25px;height:0;border-top:3px solid #fff;flex:0 0 auto;position:relative}
     .legend-sample.dash{border-top-style:dashed}
     .legend-sample.dot{border-top-style:dotted}
-    .legend-sample.outlined{filter:drop-shadow(0 -1px 0 #e6eaf0) drop-shadow(0 1px 0 #e6eaf0)}
     .legend-copy{min-width:0}
     .legend-name{font-size:11px;color:#f0f0f2;font-weight:750;line-height:1.25;overflow-wrap:anywhere}
     .legend-category{font-size:9px;color:#85858e;line-height:1.25;margin-top:2px}
@@ -128,12 +140,12 @@
     .mode-mobile .subtitle{font-size:11px;margin-top:6px}
     .mode-mobile .heading-actions{width:100%;justify-content:space-between}
     .mode-mobile .country-pill{padding:8px 10px}
-    .mode-mobile .status{font-size:10px;padding:9px 10px;margin-bottom:12px}
     .mode-mobile .metrics{grid-template-columns:1fr 1fr;gap:8px;margin-bottom:11px}
     .mode-mobile .metric{padding:12px 11px;border-radius:11px}
     .mode-mobile .metric:last-child{grid-column:1/-1}
     .mode-mobile .metric-label{font-size:9px}
     .mode-mobile .metric-value{font-size:22px;margin-top:6px}
+    .mode-mobile .metric-value.multiple{font-size:12px;line-height:1.45}
     .mode-mobile .metric-note{font-size:10px;margin-top:4px}
     .mode-mobile .chart-head{padding:13px 13px 10px}
     .mode-mobile .chart-title{font-size:12px}
@@ -146,7 +158,30 @@
     .mode-mobile .footnote{font-size:9px}
     .mode-mobile .footer{font-size:9px}
 
-    @media(max-width:560px){.mode-options{grid-template-columns:1fr}.mode-option-desc{min-height:0}.welcome-card{padding:22px}}
+    @media(max-width:560px){
+      .mode-options{grid-template-columns:1fr;gap:9px}
+      .mode-option-desc{min-height:0}
+      .welcome{padding:12px}
+      .welcome-card{padding:18px;border-radius:18px;width:min(500px,100%)}
+      .welcome h1{font-size:29px;margin:14px 0 8px}
+      .welcome-lead{font-size:13px;margin-bottom:15px}
+      .mode-option{padding:13px 14px;border-radius:13px}
+      .mode-option-title{font-size:15px;margin:9px 0 4px}
+      .mode-option-desc{font-size:11px;line-height:1.35}
+      .mode-option-foot{margin-top:10px;font-size:10px}
+      .device-preview{height:82px;padding:7px;gap:5px}
+      .preview-sidebar{gap:3px;padding:4px}
+      .preview-sidebar i,.preview-line{height:4px}
+      .preview-main{gap:4px}
+      .preview-top{height:9px}
+      .preview-metrics i{height:13px}
+      .phone-preview{height:68px;width:45px;padding:4px 3px;gap:3px;border-radius:9px}
+      .phone-preview i{height:6px}
+      .phone-preview i:first-child{height:5px}
+      .phone-preview .phone-chart{height:25px}
+      .phone-preview .phone-chart:after{top:13px}
+      .welcome-note{font-size:10px;margin-top:12px}
+    }
     @media(max-width:900px){
       .layout{grid-template-columns:220px minmax(0,1fr)}
       .sidebar{padding-left:10px;padding-right:10px}
@@ -172,7 +207,6 @@
       .chart-hint{display:none}
     }
     @media(max-width:420px){
-      .country-list{grid-template-columns:repeat(2,minmax(0,1fr))}
       .metric-value{font-size:21px}
       .mode-mobile #chart{height:370px}
       .mode-mobile h1{font-size:24px}
@@ -253,21 +287,16 @@
           </div>
         </div>
 
-        <div id="status" class="status">
-          <span>Подключаемся к Google Sheets…</span>
-          <span id="statusMeta"></span>
-        </div>
-
         <section class="metrics">
           <div class="metric">
             <div class="metric-label">Лидер по поддержке</div>
             <div id="leaderValue" class="metric-value">—</div>
-            <div id="leaderNote" class="metric-note">Среди партий мониторинга</div>
+            <div id="leaderNote" class="metric-note">Среди партий мониторинга и конкурентов</div>
           </div>
           <div class="metric">
-            <div class="metric-label">Лучшее положение относительно конкурента</div>
+            <div class="metric-label">Текущий отрыв</div>
             <div id="gapValue" class="metric-value">—</div>
-            <div id="gapNote" class="metric-note">Разница рейтингов, п. п.</div>
+            <div id="gapNote" class="metric-note">Рейтинг партии мониторинга минус рейтинг конкурента</div>
           </div>
           <div class="metric">
             <div class="metric-label">Последний замер</div>
@@ -284,16 +313,14 @@
             </div>
             <div class="chart-hint">Наведение — значения · Масштаб — колесо мыши или жест</div>
           </div>
-          <div id="chart">
-            <div class="empty">График появится после загрузки данных.</div>
-          </div>
+          <div id="chart"><div class="empty">График появится после загрузки данных.</div></div>
           <div id="legend" class="legend-wrap"></div>
         </section>
 
-        <div class="footnote">Источник: агрегированные электоральные рейтинги из Google Sheets. Для каждой страны на одном графике показаны все партии мониторинга и уникальные линии их крупнейших конкурентов. Если один конкурент указан у нескольких партий, его линия отображается один раз. Значения рейтингов — проценты.</div>
+        <div class="footnote">Источник: электоральные рейтинги Politico.</div>
         <div class="footer">
           <span>«Правый барометр» · Полилог.Экспертиза</span>
-          <span id="updatedAt">Данные не загружены</span>
+          <span id="updatedAt">Дата обновления: —</span>
         </div>
       </main>
     </div>
@@ -301,15 +328,13 @@
 
 <script>
 /*
-  НАСТРОЙКА ИНТЕГРАЦИИ
-  DATA_TSV_URL — действующая опубликованная вкладка «Данные».
-  DIRECTORY_TSV_URL — после публикации вкладки «Справочник» вставьте сюда TSV-ссылку.
-  PALETTE_TSV_URL — после публикации вкладки «Палитра» вставьте сюда TSV-ссылку.
-  Пока две последние ссылки пустые, сайт использует встроенные резервные справочники.
+  ВСЕ ИЗМЕНЯЕМЫЕ ДАННЫЕ ХРАНЯТСЯ В GOOGLE SHEETS.
+  В HTML нет встроенных копий справочника или палитры.
+  При ошибке загрузки сайт сообщает об ошибке и НЕ подменяет таблицы локальными данными.
 */
 const DATA_TSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR71VbBZh1Sr4R-yJKms30GvlFBgc38a6Xj-8K4eFCmEs3t50nTRPeeMejOUN6oZn4phLcNiD8GpMXO/pub?gid=290729289&single=true&output=tsv";
-const DIRECTORY_TSV_URL = ""; // Вставить опубликованную TSV-ссылку вкладки «Справочник»
-const PALETTE_TSV_URL = "";   // Вставить опубликованную TSV-ссылку вкладки «Палитра»
+const DIRECTORY_TSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR71VbBZh1Sr4R-yJKms30GvlFBgc38a6Xj-8K4eFCmEs3t50nTRPeeMejOUN6oZn4phLcNiD8GpMXO/pub?gid=2070689116&single=true&output=tsv";
+const PALETTE_TSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR71VbBZh1Sr4R-yJKms30GvlFBgc38a6Xj-8K4eFCmEs3t50nTRPeeMejOUN6oZn4phLcNiD8GpMXO/pub?gid=261961581&single=true&output=tsv";
 const REFRESH_EVERY_MINUTES = 10;
 const STORAGE_KEY = "polylog-right-barometer-view";
 
@@ -343,881 +368,551 @@ const FLAG_SVGS = {
   fr:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 40"><rect width="20" height="40" fill="#0055a4"/><rect x="20" width="20" height="40" fill="#fff"/><rect x="40" width="20" height="40" fill="#ef4135"/></svg>',
   se:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 40"><rect width="60" height="40" fill="#006aa7"/><path d="M19 0V40M0 20H60" stroke="#fecc00" stroke-width="6"/></svg>'
 };
-function flagData(code){
-  return "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(FLAG_SVGS[code]||"");
-}
 
-const DIRECTORY_FALLBACK = [
-  {"Ключ в листе «Данные»":"FPÖ","Страна":"Австрия","Роль":"Партия мониторинга","Полное название (оригинал)":"Freiheitliche Partei Österreichs","Русское название":"Австрийская партия свободы","Подпись на графике":"FPÖ — Австрийская партия свободы","Политическая категория":"Внесистемные правые (мониторинг)","Европейская партийная семья":"Patriots.eu","Фракция Европарламента":"Patriots for Europe (PfE)","Стиль линии":"Сплошная","Маркер":"Круг","Источник":"https://patriots.eu/parties/"},
-  {"Ключ в листе «Данные»":"VB","Страна":"Бельгия","Роль":"Партия мониторинга","Полное название (оригинал)":"Vlaams Belang","Русское название":"Фламандский интерес","Подпись на графике":"VB — Фламандский интерес","Политическая категория":"Внесистемные правые (мониторинг)","Европейская партийная семья":"Patriots.eu","Фракция Европарламента":"Patriots for Europe (PfE)","Стиль линии":"Сплошная","Маркер":"Круг","Источник":"https://patriots.eu/parties/"},
-  {"Ключ в листе «Данные»":"Reform UK","Страна":"Великобритания","Роль":"Партия мониторинга","Полное название (оригинал)":"Reform UK","Русское название":"Партия реформ Великобритании","Подпись на графике":"Reform UK — Партия реформ Великобритании","Политическая категория":"Внесистемные правые (мониторинг)","Европейская партийная семья":"Не выявлено","Фракция Европарламента":"— (Великобритания вне ЕС)","Стиль линии":"Сплошная","Маркер":"Круг","Источник":"https://reformparty.uk/"},
-  {"Ключ в листе «Данные»":"AfD","Страна":"Германия","Роль":"Партия мониторинга","Полное название (оригинал)":"Alternative für Deutschland","Русское название":"Альтернатива для Германии","Подпись на графике":"AfD — Альтернатива для Германии","Политическая категория":"Внесистемные правые (мониторинг)","Европейская партийная семья":"ESN Party","Фракция Европарламента":"Europe of Sovereign Nations (ESN)","Стиль линии":"Сплошная","Маркер":"Круг","Источник":"https://esn-party.eu/who-we-are-2/member-parties/"},
-  {"Ключ в листе «Данные»":"DF (O)","Страна":"Дания","Роль":"Партия мониторинга","Полное название (оригинал)":"Dansk Folkeparti","Русское название":"Датская народная партия","Подпись на графике":"DF — Датская народная партия","Политическая категория":"Внесистемные правые (мониторинг)","Европейская партийная семья":"Patriots.eu","Фракция Европарламента":"Patriots for Europe (PfE)","Стиль линии":"Сплошная","Маркер":"Круг","Источник":"https://patriots.eu/parties/"},
-  {"Ключ в листе «Данные»":"DD (Æ)","Страна":"Дания","Роль":"Партия мониторинга","Полное название (оригинал)":"Danmarksdemokraterne – Inger Støjberg","Русское название":"Датские демократы","Подпись на графике":"DD — Датские демократы","Политическая категория":"Внесистемные правые (мониторинг)","Европейская партийная семья":"Не подтверждено","Фракция Европарламента":"European Conservatives and Reformists (ECR)","Стиль линии":"Пунктирная","Маркер":"Квадрат","Источник":"https://ecrgroup.eu/ecr/party/denmark_democrats"},
-  {"Ключ в листе «Данные»":"FdI","Страна":"Италия","Роль":"Партия мониторинга","Полное название (оригинал)":"Fratelli d'Italia","Русское название":"Братья Италии","Подпись на графике":"FdI — Братья Италии","Политическая категория":"Внесистемные правые (мониторинг)","Европейская партийная семья":"ECR Party","Фракция Европарламента":"European Conservatives and Reformists (ECR)","Стиль линии":"Сплошная","Маркер":"Круг","Источник":"https://www.appf.europa.eu/cmsdata/294167/ECRP%20List%20of%20Full%20Members%202025-01-14.pdf"},
-  {"Ключ в листе «Данные»":"Lega","Страна":"Италия","Роль":"Партия мониторинга","Полное название (оригинал)":"Lega per Salvini Premier","Русское название":"Лига (Лига Маттео Сальвини)","Подпись на графике":"Lega — Лига","Политическая категория":"Внесистемные правые (мониторинг)","Европейская партийная семья":"Patriots.eu","Фракция Европарламента":"Patriots for Europe (PfE)","Стиль линии":"Пунктирная","Маркер":"Квадрат","Источник":"https://patriots.eu/parties/"},
-  {"Ключ в листе «Данные»":"Vox","Страна":"Испания","Роль":"Партия мониторинга","Полное название (оригинал)":"Vox","Русское название":"Вокс («Голос»)","Подпись на графике":"Vox — Вокс","Политическая категория":"Внесистемные правые (мониторинг)","Европейская партийная семья":"Patriots.eu","Фракция Европарламента":"Patriots for Europe (PfE)","Стиль линии":"Сплошная","Маркер":"Круг","Источник":"https://patriots.eu/parties/"},
-  {"Ключ в листе «Данные»":"FrP","Страна":"Норвегия","Роль":"Партия мониторинга","Полное название (оригинал)":"Fremskrittspartiet","Русское название":"Партия прогресса","Подпись на графике":"FrP — Партия прогресса","Политическая категория":"Внесистемные правые (мониторинг)","Европейская партийная семья":"Не выявлено","Фракция Европарламента":"— (Норвегия вне ЕС)","Стиль линии":"Сплошная","Маркер":"Круг","Источник":"https://www.frp.no/om-frp"},
-  {"Ключ в листе «Данные»":"Chega","Страна":"Португалия","Роль":"Партия мониторинга","Полное название (оригинал)":"Chega","Русское название":"Партия Chega («Хватит!»)","Подпись на графике":"Chega — партия «Хватит!»","Политическая категория":"Внесистемные правые (мониторинг)","Европейская партийная семья":"Patriots.eu","Фракция Европарламента":"Patriots for Europe (PfE)","Стиль линии":"Сплошная","Маркер":"Круг","Источник":"https://patriots.eu/parties/"},
-  {"Ключ в листе «Данные»":"PVV","Страна":"Нидерланды","Роль":"Партия мониторинга","Полное название (оригинал)":"Partij voor de Vrijheid","Русское название":"Партия свободы","Подпись на графике":"PVV — Партия свободы","Политическая категория":"Внесистемные правые (мониторинг)","Европейская партийная семья":"Patriots.eu","Фракция Европарламента":"Patriots for Europe (PfE)","Стиль линии":"Сплошная","Маркер":"Круг","Источник":"https://patriots.eu/parties/"},
-  {"Ключ в листе «Данные»":"FvD","Страна":"Нидерланды","Роль":"Партия мониторинга","Полное название (оригинал)":"Forum voor Democratie","Русское название":"Форум за демократию","Подпись на графике":"FvD — Форум за демократию","Политическая категория":"Внесистемные правые (мониторинг)","Европейская партийная семья":"ESN Party","Фракция Европарламента":"Europe of Sovereign Nations (ESN)","Стиль линии":"Пунктирная","Маркер":"Квадрат","Источник":"https://esn-party.eu/who-we-are-2/member-parties/"},
-  {"Ключ в листе «Данные»":"RN","Страна":"Франция","Роль":"Партия мониторинга","Полное название (оригинал)":"Rassemblement National","Русское название":"Национальное объединение","Подпись на графике":"RN — Национальное объединение","Политическая категория":"Внесистемные правые (мониторинг)","Европейская партийная семья":"Patriots.eu","Фракция Европарламента":"Patriots for Europe (PfE)","Стиль линии":"Сплошная","Маркер":"Круг","Источник":"https://patriots.eu/parties/"},
-  {"Ключ в листе «Данные»":"SD","Страна":"Швеция","Роль":"Партия мониторинга","Полное название (оригинал)":"Sverigedemokraterna","Русское название":"Шведские демократы","Подпись на графике":"SD — Шведские демократы","Политическая категория":"Внесистемные правые (мониторинг)","Европейская партийная семья":"ECR Party","Фракция Европарламента":"European Conservatives and Reformists (ECR)","Стиль линии":"Сплошная","Маркер":"Круг","Источник":"https://www.appf.europa.eu/cmsdata/294167/ECRP%20List%20of%20Full%20Members%202025-01-14.pdf"},
-  {"Ключ в листе «Данные»":"ÖVP","Страна":"Австрия","Роль":"Конкурент","Полное название (оригинал)":"Österreichische Volkspartei","Русское название":"Австрийская народная партия","Подпись на графике":"ÖVP — Австрийская народная партия","Политическая категория":"Христианские демократы и правоцентристы","Европейская партийная семья":"EPP","Фракция Европарламента":"European People's Party (EPP)","Стиль линии":"Сплошная","Маркер":"Круг","Источник":"https://www.epp.eu/parties-and-partners"},
-  {"Ключ в листе «Данные»":"N-VA","Страна":"Бельгия","Роль":"Конкурент","Полное название (оригинал)":"Nieuw-Vlaamse Alliantie","Русское название":"Новый фламандский альянс","Подпись на графике":"N-VA — Новый фламандский альянс","Политическая категория":"Консерваторы и евроскептики","Европейская партийная семья":"Членство в ECR Party не подтверждено","Фракция Европарламента":"European Conservatives and Reformists (ECR)","Стиль линии":"Сплошная","Маркер":"Круг","Источник":"https://english.n-va.be/news/the-n-va-once-again-chooses-to-join-the-ecr-group-in-the-european-parliament"},
-  {"Ключ в листе «Данные»":"Labour","Страна":"Великобритания","Роль":"Конкурент","Полное название (оригинал)":"Labour Party","Русское название":"Лейбористская партия Великобритании","Подпись на графике":"Labour — Лейбористская партия Великобритании","Политическая категория":"Социал-демократы и левоцентристы","Европейская партийная семья":"PES","Фракция Европарламента":"Progressive Alliance of Socialists and Democrats (S&D)","Стиль линии":"Сплошная","Маркер":"Круг","Источник":"https://pes.eu/members/"},
-  {"Ключ в листе «Данные»":"CDU/CSU","Страна":"Германия","Роль":"Конкурент","Полное название (оригинал)":"Christlich Demokratische Union Deutschlands / Christlich-Soziale Union in Bayern","Русское название":"Христианско-демократический союз Германии / Христианско-социальный союз Баварии","Подпись на графике":"CDU/CSU — ХДС/ХСС Германии","Политическая категория":"Христианские демократы и правоцентристы","Европейская партийная семья":"EPP","Фракция Европарламента":"European People's Party (EPP)","Стиль линии":"Сплошная","Маркер":"Круг","Источник":"https://www.epp.eu/parties-and-partners"},
-  {"Ключ в листе «Данные»":"Socialdemokratiet (A)","Страна":"Дания","Роль":"Конкурент","Полное название (оригинал)":"Socialdemokratiet","Русское название":"Социал-демократическая партия Дании","Подпись на графике":"Socialdemokratiet — Социал-демократы Дании","Политическая категория":"Социал-демократы и левоцентристы","Европейская партийная семья":"PES","Фракция Европарламента":"Progressive Alliance of Socialists and Democrats (S&D)","Стиль линии":"Сплошная","Маркер":"Круг","Источник":"https://pes.eu/members/"},
-  {"Ключ в листе «Данные»":"PD","Страна":"Италия","Роль":"Конкурент","Полное название (оригинал)":"Partito Democratico","Русское название":"Демократическая партия Италии","Подпись на графике":"PD — Демократическая партия Италии","Политическая категория":"Социал-демократы и левоцентристы","Европейская партийная семья":"PES","Фракция Европарламента":"Progressive Alliance of Socialists and Democrats (S&D)","Стиль линии":"Сплошная","Маркер":"Круг","Источник":"https://pes.eu/members/"},
-  {"Ключ в листе «Данные»":"PP","Страна":"Испания","Роль":"Конкурент","Полное название (оригинал)":"Partido Popular","Русское название":"Народная партия Испании","Подпись на графике":"PP — Народная партия Испании","Политическая категория":"Христианские демократы и правоцентристы","Европейская партийная семья":"EPP","Фракция Европарламента":"European People's Party (EPP)","Стиль линии":"Сплошная","Маркер":"Круг","Источник":"https://www.epp.eu/parties-and-partners"},
-  {"Ключ в листе «Данные»":"Ap","Страна":"Норвегия","Роль":"Конкурент","Полное название (оригинал)":"Arbeiderpartiet","Русское название":"Норвежская рабочая партия","Подпись на графике":"Ap — Норвежская рабочая партия","Политическая категория":"Социал-демократы и левоцентристы","Европейская партийная семья":"PES","Фракция Европарламента":"Progressive Alliance of Socialists and Democrats (S&D)","Стиль линии":"Сплошная","Маркер":"Круг","Источник":"https://pes.eu/members/"},
-  {"Ключ в листе «Данные»":"PS","Страна":"Португалия","Роль":"Конкурент","Полное название (оригинал)":"Partido Socialista","Русское название":"Социалистическая партия Португалии","Подпись на графике":"PS — Социалистическая партия Португалии","Политическая категория":"Социал-демократы и левоцентристы","Европейская партийная семья":"PES","Фракция Европарламента":"Progressive Alliance of Socialists and Democrats (S&D)","Стиль линии":"Сплошная","Маркер":"Круг","Источник":"https://pes.eu/members/"},
-  {"Ключ в листе «Данные»":"PRO (Progressief Nederland)","Страна":"Нидерланды","Роль":"Конкурент","Полное название (оригинал)":"Progressief Nederland","Русское название":"Прогрессивные Нидерланды","Подпись на графике":"PRO — Прогрессивные Нидерланды","Политическая категория":"Социал-демократы и левоцентристы","Европейская партийная семья":"PES","Фракция Европарламента":"S&D / Greens-EFA (делегация Европарламента разделена)","Стиль линии":"Сплошная","Маркер":"Круг","Источник":"https://progressiefnederland.nl/nieuws/leden-pro-kiezen-kitty-jong-als-nieuwe-partijvoorzitter/"},
-  {"Ключ в листе «Данные»":"NFP","Страна":"Франция","Роль":"Конкурент","Полное название (оригинал)":"Nouveau Front populaire","Русское название":"Новый народный фронт (левый альянс)","Подпись на графике":"NFP — Новый народный фронт","Политическая категория":"Составные коалиции и альянсы","Европейская партийная семья":"Единой семьи нет; партии-участницы относятся к разным объединениям","Фракция Европарламента":"S&D / Greens-EFA / The Left (по партиям-участницам)","Стиль линии":"Сплошная","Маркер":"Круг","Источник":"https://www2.assemblee-nationale.fr/deputes/liste/partis-politiques?annee=2026"},
-  {"Ключ в листе «Данные»":"S","Страна":"Швеция","Роль":"Конкурент","Полное название (оригинал)":"Sveriges socialdemokratiska arbetareparti","Русское название":"Социал-демократическая рабочая партия Швеции","Подпись на графике":"S — Социал-демократы Швеции","Политическая категория":"Социал-демократы и левоцентристы","Европейская партийная семья":"PES","Фракция Европарламента":"Progressive Alliance of Socialists and Democrats (S&D)","Стиль линии":"Сплошная","Маркер":"Круг","Источник":"https://pes.eu/members/"}
-];
-
-const PALETTE_FALLBACK = [
-  {"Политическая категория":"Внесистемные правые (мониторинг)","Цвет HEX":"#FFFFFF","Кого обозначает":"Основные партии исследования","Стиль отображения":"Толстая линия; сплошная или пунктирная по справочнику","Толщина линии px":"4.0","Обводка HEX":"#FFFFFF","Комментарий":"Белый цвет и повышенная толщина — главный визуальный акцент."},
-  {"Политическая категория":"Социал-демократы и левоцентристы","Цвет HEX":"#FF3030","Кого обозначает":"Социал-демократические партии","Стиль отображения":"Тонкая сплошная","Толщина линии px":"2.3","Обводка HEX":"#FF3030","Комментарий":"Ярко-красный."},
-  {"Политическая категория":"Радикальные левые и коммунисты","Цвет HEX":"#941B2B","Кого обозначает":"Радикально-левые и коммунистические партии","Стиль отображения":"Тонкая сплошная","Толщина линии px":"2.3","Обводка HEX":"#941B2B","Комментарий":"Тёмно-красный; в текущем списке конкурентов отдельной однородной партии этой категории нет."},
-  {"Политическая категория":"Христианские демократы и правоцентристы","Цвет HEX":"#111111","Кого обозначает":"Христианско-демократические и правоцентристские партии","Стиль отображения":"Тонкая сплошная с контрастной обводкой","Толщина линии px":"2.3","Обводка HEX":"#E6EAF0","Комментарий":"Чёрная линия с тонкой светлой обводкой для видимости на тёмном фоне."},
-  {"Политическая категория":"Либералы и центристы","Цвет HEX":"#FFD43B","Кого обозначает":"Либеральные и центристские партии","Стиль отображения":"Тонкая сплошная","Толщина линии px":"2.3","Обводка HEX":"#FFD43B","Комментарий":"Жёлтый."},
-  {"Политическая категория":"Зелёные","Цвет HEX":"#35B85A","Кого обозначает":"Зелёные партии","Стиль отображения":"Тонкая сплошная","Толщина линии px":"2.3","Обводка HEX":"#35B85A","Комментарий":"Зелёный."},
-  {"Политическая категория":"Консерваторы и евроскептики","Цвет HEX":"#9675C8","Кого обозначает":"Консервативные и евроскептические партии","Стиль отображения":"Тонкая сплошная","Толщина линии px":"2.3","Обводка HEX":"#9675C8","Комментарий":"Отдельная категория для N-VA."},
-  {"Политическая категория":"Составные коалиции и альянсы","Цвет HEX":"#A58B70","Кого обозначает":"Многопартийные блоки без единой партийной семьи","Стиль отображения":"Тонкая сплошная","Толщина линии px":"2.3","Обводка HEX":"#A58B70","Комментарий":"Используется для NFP, поскольку это коалиция, а не единая партия."},
-  {"Политическая категория":"Не классифицированы","Цвет HEX":"#858B95","Кого обозначает":"Недостаточно данных для устойчивой классификации","Стиль отображения":"Тонкая сплошная","Толщина линии px":"2.3","Обводка HEX":"#858B95","Комментарий":"Резервная категория."}
-];
-
-const DEFAULT_PALETTE = {
-  "Внесистемные правые (мониторинг)":{"color":"#FFFFFF","width":4.2,"outline":"#FFFFFF"},
-  "Социал-демократы и левоцентристы":{"color":"#FF3030","width":2.4,"outline":"#FF3030"},
-  "Радикальные левые и коммунисты":{"color":"#941B2B","width":2.4,"outline":"#941B2B"},
-  "Христианские демократы и правоцентристы":{"color":"#111111","width":2.5,"outline":"#E6EAF0"},
-  "Либералы и центристы":{"color":"#FFD43B","width":2.4,"outline":"#FFD43B"},
-  "Зелёные":{"color":"#35B85A","width":2.4,"outline":"#35B85A"},
-  "Консерваторы и евроскептики":{"color":"#9675C8","width":2.4,"outline":"#9675C8"},
-  "Составные коалиции и альянсы":{"color":"#A58B70","width":2.4,"outline":"#A58B70"},
-  "Не классифицированы":{"color":"#858B95","width":2.4,"outline":"#858B95"}
+const state = {
+  rows: [],
+  directory: [],
+  palette: new Map(),
+  selectedCountry: "",
+  mode: "desktop",
+  lastSuccessfulLoad: null,
+  loading: false
 };
 
-let allRows=[];
-let directoryRows=DIRECTORY_FALLBACK.map(normalizeDirectoryRow);
-let paletteMap={...DEFAULT_PALETTE};
-let selectedCountry="";
-let currentMode="desktop";
-let loadWarnings=[];
+const $ = id => document.getElementById(id);
 
-const $=id=>document.getElementById(id);
-
-function norm(v){
-  return String(v??"").replace(/^\uFEFF/,"").trim().toLowerCase()
+function norm(value){
+  return String(value ?? "").replace(/^\uFEFF/,"").trim().toLowerCase()
     .replaceAll("ё","е").replace(/[’‘`]/g,"'").replace(/\s+/g," ");
 }
-function clean(v){return String(v??"").replace(/^\uFEFF/,"").trim();}
-function parseNum(v){
-  if(v===null||v===undefined||clean(v)==="")return null;
-  const n=Number(clean(v).replace(/\s/g,"").replace("%","").replace(",","."));
-  return Number.isFinite(n)?n:null;
+function clean(value){return String(value ?? "").replace(/^\uFEFF/,"").trim();}
+function escapeHtml(value){
+  return String(value ?? "").replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch]));
 }
-function parseDate(v){
-  const s=clean(v);
-  if(!s)return null;
-  let m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
-  if(m)return new Date(Number(m[1]),Number(m[2])-1,Number(m[3]));
-  m=s.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);
-  if(m)return new Date(Number(m[3]),Number(m[2])-1,Number(m[1]));
-  const d=new Date(s);
-  return Number.isNaN(d.getTime())?null:d;
+function flagData(code){return "data:image/svg+xml;charset=utf-8," + encodeURIComponent(FLAG_SVGS[code] || "");}
+function normalizeCountry(raw){
+  const value = norm(raw);
+  const aliases = {
+    "great britain":"Великобритания","united kingdom":"Великобритания","uk":"Великобритания",
+    "the netherlands":"Нидерланды","голландия":"Нидерланды"
+  };
+  if(aliases[value]) return aliases[value];
+  return COUNTRIES.find(country => norm(country.key) === value)?.key || clean(raw);
 }
-function dateKey(d){
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+function parseNum(value){
+  if(value === null || value === undefined || clean(value) === "") return null;
+  const normalized = clean(value).replace(/\s/g,"").replace("%","").replace(",",".");
+  const number = Number(normalized);
+  return Number.isFinite(number) ? number : null;
 }
-function formatDate(d,year=true){
-  return d?d.toLocaleDateString("ru-RU",year?{day:"2-digit",month:"2-digit",year:"numeric"}:{day:"2-digit",month:"short"}):"—";
+function parseDate(value){
+  const text = clean(value);
+  if(!text) return null;
+  let match = text.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(match) return new Date(Number(match[1]),Number(match[2])-1,Number(match[3]));
+  match = text.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})/);
+  if(match) return new Date(Number(match[3]),Number(match[2])-1,Number(match[1]));
+  const parsed = new Date(text);
+  return Number.isNaN(parsed.getTime()) ? null : new Date(parsed.getFullYear(),parsed.getMonth(),parsed.getDate());
 }
-function formatPct(v){
-  return v===null||v===undefined?"—":Number(v).toLocaleString("ru-RU",{maximumFractionDigits:1})+"%";
+function dateKey(date){
+  return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
 }
-function formatGap(v){
-  return v===null||v===undefined?"—":(v>0?"+":"")+Number(v).toLocaleString("ru-RU",{maximumFractionDigits:1})+" п. п.";
+function formatDate(date, withYear=true){
+  if(!date) return "—";
+  return date.toLocaleDateString("ru-RU",withYear
+    ? {day:"2-digit",month:"2-digit",year:"numeric"}
+    : {day:"2-digit",month:"short"});
 }
-function findHeader(headers,candidates,exclude=[]){
-  const hs=headers.map(h=>norm(h));
-  for(const c of candidates){
-    const i=hs.findIndex(h=>h===norm(c)&&!exclude.some(x=>h.includes(norm(x))));
-    if(i>=0)return headers[i];
+function formatPct(value){
+  return value === null || value === undefined ? "—" : Number(value).toLocaleString("ru-RU",{maximumFractionDigits:1}) + "%";
+}
+function formatGap(value){
+  if(value === null || value === undefined) return "—";
+  const prefix = value > 0 ? "+" : value < 0 ? "−" : "";
+  return prefix + Math.abs(Number(value)).toLocaleString("ru-RU",{maximumFractionDigits:1}) + " п. п.";
+}
+function findHeader(headers, candidates, exclude=[]){
+  const normalized = headers.map(header => norm(header));
+  for(const candidate of candidates){
+    const index = normalized.findIndex(header => header === norm(candidate) && !exclude.some(item => header.includes(norm(item))));
+    if(index >= 0) return headers[index];
   }
-  for(const c of candidates){
-    const i=hs.findIndex(h=>h.includes(norm(c))&&!exclude.some(x=>h.includes(norm(x))));
-    if(i>=0)return headers[i];
+  for(const candidate of candidates){
+    const index = normalized.findIndex(header => header.includes(norm(candidate)) && !exclude.some(item => header.includes(norm(item))));
+    if(index >= 0) return headers[index];
   }
   return null;
 }
-function parseTSV(text){
-  const result=Papa.parse(text,{
-    header:true,delimiter:"\t",skipEmptyLines:true,
-    transformHeader:h=>clean(h)
-  });
-  if(result.errors?.length&&result.data.length===0){
-    throw new Error("Не удалось разобрать TSV: "+result.errors[0].message);
-  }
-  return result.data;
-}
-function normalizeCountry(raw){
-  const v=norm(raw);
-  const aliases={
-    "great britain":"Великобритания",
-    "united kingdom":"Великобритания",
-    "uk":"Великобритания",
-    "the netherlands":"Нидерланды",
-    "голландия":"Нидерланды"
-  };
-  if(aliases[v])return aliases[v];
-  return COUNTRIES.find(c=>norm(c.key)===v)?.key||clean(raw);
+function parseTSV(text, sourceName){
+  if(!text || /<html|<!doctype/i.test(text.slice(0,500))) throw new Error(`${sourceName}: Google Sheets вернул не TSV-таблицу.`);
+  const result = Papa.parse(text,{header:true,delimiter:"\t",skipEmptyLines:true,transformHeader:header=>clean(header)});
+  if(result.errors?.length && result.data.length === 0) throw new Error(`${sourceName}: ${result.errors[0].message}`);
+  if(!result.meta.fields?.length) throw new Error(`${sourceName}: не найдены заголовки столбцов.`);
+  return result.data.filter(row => Object.values(row).some(value => clean(value) !== ""));
 }
 function transformData(data){
-  if(!data.length)throw new Error("Вкладка «Данные» пуста.");
-  const headers=Object.keys(data[0]);
-  const h={
+  if(!data.length) throw new Error("Вкладка «Данные» пуста.");
+  const headers = Object.keys(data[0]);
+  const columns = {
     date:findHeader(headers,["дата","date"]),
     country:findHeader(headers,["страна","country"]),
-    party:findHeader(headers,["партия","party"]),
+    party:findHeader(headers,["партия мониторинга","партия","party"]),
     rating:findHeader(headers,["рейтинг партии","рейтинг","party rating"],["конкурент"]),
-    competitor:findHeader(headers,["конкурент","партия конкурента","название конкурента","competitor name"]),
-    competitorRating:findHeader(headers,["рейтинг конкурента","competitor rating"])
+    competitor:findHeader(headers,["название конкурента","партия конкурента","конкурент","competitor name","competitor"]),
+    competitorRating:findHeader(headers,["рейтинг конкурента","рейтинг партии-конкурента","competitor rating"])
   };
-  const missing=Object.entries(h).filter(([k,v])=>!v&&k!=="competitor").map(([k])=>k);
+  const missing = Object.entries(columns).filter(([key,value])=>!value).map(([key])=>key);
   if(missing.length){
-    throw new Error("Не найдены обязательные столбцы: "+missing.join(", ")+". Заголовки: "+headers.join(" · "));
+    throw new Error("В листе «Данные» не найдены столбцы: " + missing.join(", ") + ". Проверьте заголовки таблицы.");
   }
-  return data.map(o=>{
-    const d=parseDate(o[h.date]),r=parseNum(o[h.rating]),cr=parseNum(o[h.competitorRating]);
-    if(!d||r===null)return null;
+  const rows = data.map(row=>{
+    const date = parseDate(row[columns.date]);
+    const rating = parseNum(row[columns.rating]);
+    const competitorRating = parseNum(row[columns.competitorRating]);
+    if(!date || rating === null) return null;
     return {
-      date:d,country:normalizeCountry(o[h.country]),party:clean(o[h.party]),
-      rating:r,competitor:h.competitor?clean(o[h.competitor]):"",
-      competitorRating:cr
+      date,
+      country:normalizeCountry(row[columns.country]),
+      party:clean(row[columns.party]),
+      rating,
+      competitor:clean(row[columns.competitor]),
+      competitorRating
     };
-  }).filter(x=>x&&x.country&&x.party).sort((a,b)=>a.date-b.date);
+  }).filter(row=>row && row.country && row.party);
+  if(!rows.length) throw new Error("В листе «Данные» нет строк с корректными датами и рейтингами.");
+  return rows.sort((a,b)=>a.date-b.date);
 }
 function normalizeDirectoryRow(row){
-  const get=(...names)=>{
-    for(const n of names){
-      const k=Object.keys(row||{}).find(x=>norm(x)===norm(n));
-      if(k)return clean(row[k]);
+  const get = (...names) => {
+    for(const name of names){
+      const key = Object.keys(row || {}).find(header => norm(header) === norm(name));
+      if(key) return clean(row[key]);
     }
     return "";
   };
+  const key = get("Ключ в листе «Данные»","Ключ в листе 'Данные'","Ключ");
+  const country = normalizeCountry(get("Страна"));
+  const russian = get("Русское название");
   return {
-    key:get("Ключ в листе «Данные»","Ключ в листе 'Данные'","Ключ"),
-    country:normalizeCountry(get("Страна")),
+    key,
+    country,
     role:get("Роль"),
     original:get("Полное название (оригинал)"),
-    russian:get("Русское название"),
-    label:get("Подпись на графике"),
-    category:get("Политическая категория")||"Не классифицированы",
-    family:get("Европейская партийная семья"),
-    epgroup:get("Фракция Европарламента"),
-    lineStyle:get("Стиль линии")||"Сплошная",
-    marker:get("Маркер")||"Круг",
+    russian,
+    label:get("Подпись на графике") || (russian ? `${key} — ${russian}` : key),
+    category:get("Политическая категория") || "Не классифицированы",
+    lineStyle:get("Стиль линии") || "Сплошная",
+    marker:get("Маркер") || "Круг",
     source:get("Источник")
   };
 }
-
-function makeDirectoryLookup(country,key){
-  const n=norm(key);
-  return directoryRows.find(x=>x.country===country&&norm(x.key)===n)||null;
+function loadDirectory(data){
+  if(!data.length) throw new Error("Вкладка «Справочник» пуста.");
+  const rows = data.map(normalizeDirectoryRow).filter(row=>row.key && row.country);
+  if(!rows.length) throw new Error("В «Справочнике» не найдены строки с ключом и страной.");
+  return rows;
 }
-
+function validHex(value){return /^#[0-9a-f]{6}$/i.test(clean(value));}
+function loadPalette(data){
+  if(!data.length) throw new Error("Вкладка «Палитра» пуста.");
+  const palette = new Map();
+  for(const row of data){
+    const categoryKey = Object.keys(row).find(key=>norm(key)===norm("Политическая категория"));
+    const category = categoryKey ? clean(row[categoryKey]) : "";
+    if(!category) continue;
+    const get = name => {
+      const key = Object.keys(row).find(header=>norm(header)===norm(name));
+      return key ? clean(row[key]) : "";
+    };
+    const color = get("Цвет HEX");
+    const outline = get("Обводка HEX");
+    const width = parseNum(get("Толщина линии px"));
+    palette.set(category,{
+      color:validHex(color) ? color : "#858B95",
+      outline:validHex(outline) ? outline : (validHex(color) ? color : "#858B95"),
+      width:width && width > 0 ? width : 2.3,
+      description:get("Кого обозначает"),
+      displayStyle:get("Стиль отображения"),
+      comment:get("Комментарий")
+    });
+  }
+  if(!palette.size) throw new Error("В «Палитре» не найдены категории с цветами.");
+  return palette;
+}
+function basePartyKey(value){
+  return norm(value).replace(/\s*\([^)]*\)\s*$/," ").trim();
+}
 function getMeta(country,key,role){
-  const found=makeDirectoryLookup(country,key);
-  if(found)return found;
+  const target = norm(key);
+  let found = state.directory.find(row=>row.country===country && norm(row.key)===target);
+  if(!found){
+    const base = basePartyKey(key);
+    found = state.directory.find(row=>row.country===country && basePartyKey(row.key)===base);
+  }
+  if(found) return found;
   return {
-    key,country,role,original:key,russian:key,label:key,
-    category:role==="Партия мониторинга"?"Внесистемные правые (мониторинг)":"Не классифицированы",
-    lineStyle:"Сплошная",marker:"Круг"
+    key:clean(key),country,role,original:clean(key),russian:clean(key),label:clean(key),
+    category:"Не классифицированы",lineStyle:"Сплошная",marker:"Круг",source:""
   };
 }
-
-function buildPalette(rows){
-  const out={...DEFAULT_PALETTE};
-  for(const row of rows){
-    const get=(...names)=>{
-      for(const n of names){
-        const k=Object.keys(row).find(x=>norm(x)===norm(n));
-        if(k)return clean(row[k]);
-      }
-      return "";
-    };
-    const cat=get("Политическая категория");
-    if(!cat)continue;
-    out[cat]={
-      color:get("Цвет HEX")||DEFAULT_PALETTE[cat]?.color||"#858B95",
-      width:parseNum(get("Толщина линии px"))||2.4,
-      outline:get("Обводка HEX")||get("Цвет HEX")||"#858B95",
-      description:get("Кого обозначает"),
-      style:get("Стиль отображения")
-    };
-  }
-  return out;
+function getPalette(category){
+  return state.palette.get(category) || {color:"#858B95",outline:"#858B95",width:2.3};
 }
-
 function dashFor(value){
-  const v=norm(value);
-  if(v.includes("точеч")||v.includes("dot"))return "dot";
-  if(v.includes("пунктир")||v.includes("dash"))return "dash";
+  const text = norm(value);
+  if(text.includes("точеч") || text.includes("dot")) return "dot";
+  if(text.includes("пунктир") || text.includes("dash")) return "dash";
   return "solid";
 }
-
 function markerFor(value){
-  const v=norm(value);
-  if(v.includes("квадрат")||v.includes("square"))return "square";
-  if(v.includes("ромб")||v.includes("diamond"))return "diamond";
-  if(v.includes("треуголь")||v.includes("triangle"))return "triangle-up";
+  const text = norm(value);
+  if(text.includes("квадрат") || text.includes("square")) return "square";
+  if(text.includes("ромб") || text.includes("diamond")) return "diamond";
+  if(text.includes("треуголь") || text.includes("triangle")) return "triangle-up";
   return "circle";
 }
-
-function countryMeta(name){
-  return COUNTRIES.find(c=>c.key===name)||{key:name,code:""};
+function countryMeta(name){return COUNTRIES.find(country=>country.key===name) || {key:name,code:""};}
+function getCountryRows(country){return state.rows.filter(row=>row.country===country);}
+function latestPerParty(rows){
+  const latest = new Map();
+  for(const row of rows){
+    const key = norm(row.party);
+    const previous = latest.get(key);
+    if(!previous || row.date >= previous.date) latest.set(key,row);
+  }
+  return [...latest.values()];
 }
+function buildSeries(country){
+  const rows = getCountryRows(country);
+  const monitorGroups = new Map();
+  const competitorGroups = new Map();
 
-function setStatus(message,type="normal",meta=""){
-  const el=$("status");
-  el.className="status"+(type==="error"?" error":type==="warn"?" warn":"");
-  el.innerHTML="";
-  const left=document.createElement("span");
-  left.textContent=message;
-  const right=document.createElement("span");
-  right.id="statusMeta";
-  right.textContent=meta;
-  el.append(left,right);
-}
+  for(const row of rows){
+    const partyMeta = getMeta(country,row.party,"Партия мониторинга");
+    const partyKey = norm(partyMeta.key || row.party);
+    if(!monitorGroups.has(partyKey)) monitorGroups.set(partyKey,{meta:partyMeta,points:new Map()});
+    monitorGroups.get(partyKey).points.set(dateKey(row.date),{date:row.date,value:row.rating});
 
-async function fetchTSV(url){
-  const response=await fetch(
-    url+(url.includes("?")?"&":"?")+"_="+Date.now(),
-    {cache:"no-store"}
-  );
-  if(!response.ok)throw new Error("HTTP "+response.status);
-  return await response.text();
-}
-
-async function loadOptionalSources(){
-  loadWarnings=[];
-
-  if(DIRECTORY_TSV_URL){
-    try{
-      const rows=parseTSV(await fetchTSV(DIRECTORY_TSV_URL));
-      const parsed=rows.map(normalizeDirectoryRow).filter(x=>x.key&&x.country);
-      if(parsed.length)directoryRows=parsed;
-      else loadWarnings.push("Справочник пуст — используется встроенная версия.");
-    }catch(e){
-      directoryRows=DIRECTORY_FALLBACK.map(normalizeDirectoryRow);
-      loadWarnings.push("Не удалось загрузить «Справочник»: используется встроенная версия.");
+    if(row.competitor && row.competitorRating !== null){
+      const competitorMeta = getMeta(country,row.competitor,"Конкурент");
+      const competitorKey = norm(competitorMeta.key || row.competitor);
+      if(!competitorGroups.has(competitorKey)) competitorGroups.set(competitorKey,{meta:competitorMeta,points:new Map()});
+      const group = competitorGroups.get(competitorKey);
+      const day = dateKey(row.date);
+      const existing = group.points.get(day);
+      if(existing && existing.value !== row.competitorRating){
+        console.warn("Разные значения одного конкурента за одну дату:",country,row.competitor,day,existing.value,row.competitorRating);
+      } else if(!existing){
+        group.points.set(day,{date:row.date,value:row.competitorRating});
+      }
     }
-  }else{
-    directoryRows=DIRECTORY_FALLBACK.map(normalizeDirectoryRow);
-    loadWarnings.push("«Справочник» пока встроенный; добавьте TSV-ссылку после публикации вкладки.");
   }
 
-  if(PALETTE_TSV_URL){
-    try{
-      const rows=parseTSV(await fetchTSV(PALETTE_TSV_URL));
-      paletteMap=buildPalette(rows);
-    }catch(e){
-      paletteMap=buildPalette(PALETTE_FALLBACK);
-      loadWarnings.push("Не удалось загрузить «Палитру»: используется встроенная версия.");
-    }
-  }else{
-    paletteMap=buildPalette(PALETTE_FALLBACK);
-    loadWarnings.push("«Палитра» пока встроенная; добавьте TSV-ссылку после публикации вкладки.");
-  }
+  const convert = groups => [...groups.values()].map(group=>({
+    meta:group.meta,
+    points:[...group.points.values()].sort((a,b)=>a.date-b.date)
+  }));
+  return {monitor:convert(monitorGroups),competitors:convert(competitorGroups),rows};
 }
-
-function renderCountryButtons(){
-  const query=norm($("countrySearch")?.value||"");
-  const counts={};
-
-  allRows.forEach(r=>{
-    counts[r.country]??=new Set();
-    counts[r.country].add(r.party);
-  });
-
-  const available=COUNTRIES.filter(c=>counts[c.key]);
-  const desktop=$("countryListDesktop");
-  const mobile=$("countryListMobile");
-  const savedMobileScroll=mobile.scrollLeft;
-
-  desktop.innerHTML="";
-  mobile.innerHTML="";
-
-  available.filter(c=>!query||norm(c.key).includes(query)).forEach(c=>{
-    const partyCount=counts[c.key]?.size||0;
-    const flag=`<img class="flag" src="${flagData(c.code)}" alt="Флаг ${c.key}">`;
-
-    const b=document.createElement("button");
-    b.type="button";
-    b.className="country-btn"+(c.key===selectedCountry?" active":"");
-    b.innerHTML=flag+`<span class="country-name"></span><span class="country-count">${partyCount} парт.</span>`;
-    b.querySelector(".country-name").textContent=c.key;
-    b.addEventListener("click",()=>selectCountry(c.key));
-    desktop.appendChild(b);
-
-    const m=document.createElement("button");
-    m.type="button";
-    m.className="mobile-country-btn"+(c.key===selectedCountry?" active":"");
-    m.innerHTML=flag+`<span></span>`;
-    m.querySelector("span").textContent=c.key;
-    m.addEventListener("click",()=>selectCountry(c.key));
-    mobile.appendChild(m);
-  });
-
-  mobile.scrollLeft=savedMobileScroll;
+function tooltipFor(meta,role,point){
+  const lines = [
+    `<b>${escapeHtml(meta.label || meta.key)}</b>`,
+    meta.original ? escapeHtml(meta.original) : "",
+    meta.russian ? escapeHtml(meta.russian) : "",
+    escapeHtml(meta.category || "Не классифицированы"),
+    `${formatDate(point.date,true)}<br>Рейтинг: ${formatPct(point.value)}`
+  ].filter(Boolean);
+  return lines.join("<br>");
 }
+function makeTrace(series,isMonitor,outlineLayer=false){
+  const meta = series.meta;
+  const palette = getPalette(meta.category);
+  const color = palette.color;
+  const outline = palette.outline || color;
+  const width = palette.width || (isMonitor ? 4 : 2.3);
+  const dash = dashFor(meta.lineStyle);
+  const marker = markerFor(meta.marker);
+  const x = series.points.map(point=>point.date);
+  const y = series.points.map(point=>point.value);
+  const customdata = series.points.map(point=>tooltipFor(meta,isMonitor?"Партия мониторинга":"Конкурент",point));
 
-function selectCountry(country){
-  selectedCountry=country;
-  renderCountryButtons();
-  renderCountry();
-}
-
-function setMetric(id,value,note,color){
-  $(id).textContent=value;
-  $(id).style.color=color||"#f4f4f5";
-  if(note){
-    const noteId={
-      leaderValue:"leaderNote",
-      gapValue:"gapNote",
-      dateValue:"dateNote"
-    }[id];
-    if(noteId)$(noteId).textContent=note;
-  }
-}
-
-function getSeriesStyle(meta,isMonitor){
-  if(isMonitor){
+  if(outlineLayer){
     return {
-      color:"#FFFFFF",width:4.2,outline:"#FFFFFF",
-      dash:dashFor(meta.lineStyle),marker:markerFor(meta.marker)
+      x,y,mode:"lines",type:"scatter",showlegend:false,hoverinfo:"skip",
+      line:{color:outline,width:width+2,dash,shape:"linear"},
+      connectgaps:false
     };
   }
-
-  const p=paletteMap[meta.category]||
-    paletteMap["Не классифицированы"]||
-    DEFAULT_PALETTE["Не классифицированы"];
-
   return {
-    color:p.color||"#858B95",
-    width:p.width||2.4,
-    outline:p.outline||p.color||"#858B95",
-    dash:dashFor(meta.lineStyle),
-    marker:markerFor(meta.marker)
+    x,y,mode:"lines+markers",type:"scatter",name:meta.label || meta.key,
+    showlegend:false,customdata,hovertemplate:"%{customdata}<extra></extra>",
+    line:{color,width,dash,shape:"linear"},
+    marker:{color,symbol:marker,size:isMonitor?7:6,line:{color:outline,width:1}},
+    connectgaps:false
   };
 }
-
-function buildCountryData(country){
-  const rows=allRows.filter(r=>r.country===country);
-  if(!rows.length)return null;
-
-  const latestDate=rows.reduce(
-    (m,r)=>r.date>m?r.date:m,
-    rows[0].date
-  );
-
-  const latestRows=rows.filter(
-    r=>dateKey(r.date)===dateKey(latestDate)
-  );
-
-  const partyMap=new Map();
-  const competitorMap=new Map();
-  let conflicts=0;
-
-  for(const r of rows){
-    const pk=norm(r.party);
-
-    if(!partyMap.has(pk)){
-      partyMap.set(pk,{
-        raw:r.party,
-        meta:getMeta(country,r.party,"Партия мониторинга"),
-        values:new Map()
-      });
-    }
-
-    partyMap.get(pk).values.set(
-      dateKey(r.date),
-      {date:r.date,value:r.rating}
-    );
-
-    if(r.competitor&&r.competitorRating!==null){
-      const ck=norm(r.competitor);
-
-      if(!competitorMap.has(ck)){
-        competitorMap.set(ck,{
-          raw:r.competitor,
-          meta:getMeta(country,r.competitor,"Конкурент"),
-          values:new Map()
-        });
-      }
-
-      const map=competitorMap.get(ck).values;
-      const dk=dateKey(r.date);
-
-      if(map.has(dk)&&Math.abs(map.get(dk).value-r.competitorRating)>.001){
-        conflicts++;
-      }else if(!map.has(dk)){
-        map.set(dk,{date:r.date,value:r.competitorRating});
-      }
+function buildLegendItem(series,isMonitor){
+  const meta = series.meta;
+  const palette = getPalette(meta.category);
+  const dash = dashFor(meta.lineStyle);
+  const borderStyle = dash === "dash" ? "dashed" : dash === "dot" ? "dotted" : "solid";
+  const shadow = palette.outline && palette.outline.toLowerCase() !== palette.color.toLowerCase()
+    ? `0 0 0 1px ${palette.outline}` : "none";
+  const sample = `<span class="legend-sample" style="border-top:${Math.max(2,palette.width)}px ${borderStyle} ${escapeHtml(palette.color)};box-shadow:${shadow}"></span>`;
+  const name = escapeHtml(meta.label || meta.key);
+  const category = escapeHtml(meta.category || "Не классифицированы");
+  return `<div class="legend-item">${sample}<div class="legend-copy"><div class="legend-name">${name}</div><div class="legend-category">${category}</div></div></div>`;
+}
+function renderLegend(series){
+  const monitor = series.monitor.map(item=>buildLegendItem(item,true)).join("");
+  const competitors = series.competitors.map(item=>buildLegendItem(item,false)).join("");
+  let html = "";
+  if(monitor) html += `<div class="legend-section"><div class="legend-section-title">Партии мониторинга</div><div class="legend-items">${monitor}</div></div>`;
+  if(competitors) html += `<div class="legend-section"><div class="legend-section-title">Конкуренты</div><div class="legend-items">${competitors}</div></div>`;
+  $("legend").innerHTML = html || "";
+}
+function setEmpty(message,isError=false){
+  $("chart").innerHTML = `<div class="empty${isError?" error":""}">${escapeHtml(message)}</div>`;
+  $("legend").innerHTML = "";
+}
+function renderMetrics(series){
+  const latestMonitor = [];
+  for(const item of series.monitor){
+    if(item.points.length){
+      const point = item.points[item.points.length-1];
+      latestMonitor.push({meta:item.meta,rating:point.value,date:point.date,role:"monitor"});
     }
   }
+  const latestCompetitors = [];
+  for(const item of series.competitors){
+    if(item.points.length){
+      const point = item.points[item.points.length-1];
+      latestCompetitors.push({meta:item.meta,rating:point.value,date:point.date,role:"competitor"});
+    }
+  }
+  const standings = [...latestMonitor,...latestCompetitors].sort((a,b)=>b.rating-a.rating);
+  const leader = standings[0];
+  $("leaderValue").textContent = leader ? formatPct(leader.rating) : "—";
+  $("leaderNote").textContent = leader ? (leader.meta.label || leader.meta.key) : "Нет доступных рейтингов";
 
-  const partySeries=[...partyMap.values()].sort((a,b)=>{
-    const ai=directoryRows.findIndex(
-      x=>x.country===country&&norm(x.key)===norm(a.raw)
-    );
-    const bi=directoryRows.findIndex(
-      x=>x.country===country&&norm(x.key)===norm(b.raw)
-    );
-    return (ai<0?999:ai)-(bi<0?999:bi);
-  });
+  const gaps = [];
+  for(const row of latestPerParty(series.rows)){
+    if(!row.competitor || row.competitorRating === null) continue;
+    const meta = getMeta(series.rows[0]?.country || state.selectedCountry,row.party,"Партия мониторинга");
+    gaps.push({meta,value:row.rating-row.competitorRating});
+  }
+  gaps.sort((a,b)=>a.meta.key.localeCompare(b.meta.key,"ru"));
+  const gapValue = $("gapValue");
+  gapValue.classList.toggle("multiple",gaps.length>1);
+  if(gaps.length===1){
+    gapValue.textContent = formatGap(gaps[0].value);
+    gapValue.style.color = gaps[0].value < 0 ? "#ff7777" : gaps[0].value > 0 ? "#62d6ad" : "#fff";
+    $("gapNote").textContent = gaps[0].meta.label || gaps[0].meta.key;
+  } else if(gaps.length>1){
+    gapValue.innerHTML = gaps.map(item=>`<div class="gap-line"><span>${escapeHtml(item.meta.key)}</span><strong style="color:${item.value<0?"#ff7777":item.value>0?"#62d6ad":"#fff"}">${escapeHtml(formatGap(item.value))}</strong></div>`).join("");
+    gapValue.style.color = "#fff";
+    $("gapNote").textContent = "Текущий отрыв каждой партии от её конкурента";
+  } else {
+    gapValue.textContent = "—";
+    gapValue.style.color = "#fff";
+    $("gapNote").textContent = "Нет данных для расчёта отрыва";
+  }
 
-  const competitorSeries=[...competitorMap.values()];
-
-  return {
-    rows,latestDate,latestRows,partySeries,competitorSeries,conflicts
-  };
+  const latestDate = series.rows.reduce((latest,row)=>!latest || row.date>latest ? row.date : latest,null);
+  $("dateValue").textContent = latestDate ? formatDate(latestDate,false) : "—";
+  $("dateNote").textContent = latestDate ? formatDate(latestDate,true) : "Дата последних доступных данных";
 }
-
-function makeTrace(series,isMonitor,dates){
-  const meta=series.meta;
-  const style=getSeriesStyle(meta,isMonitor);
-  const values=dates.map(
-    d=>series.values.get(dateKey(d))?.value??null
-  );
-
-  const label=meta.label||series.raw;
-  const original=meta.original||series.raw;
-  const category=isMonitor?"Внесистемные правые (мониторинг)":meta.category;
-
-  const family=meta.family?`<br>Европейская семья: ${meta.family}`:"";
-  const epgroup=meta.epgroup?`<br>Фракция Европарламента: ${meta.epgroup}`:"";
-
-  const trace={
-    x:dates,
-    y:values,
-    type:"scatter",
-    mode:"lines+markers",
-    name:label,
+function renderChart(series){
+  if(!window.Plotly){setEmpty("Не удалось загрузить библиотеку графиков. Обновите страницу.",true);return;}
+  if(!series.monitor.length){setEmpty("Для этой страны нет партий мониторинга.");return;}
+  const outlineTraces = [];
+  const mainTraces = [];
+  const allSeries = [
+    ...series.monitor.map(item=>({item,isMonitor:true})),
+    ...series.competitors.map(item=>({item,isMonitor:false}))
+  ];
+  for(const entry of allSeries){
+    const palette = getPalette(entry.item.meta.category);
+    if(palette.outline && palette.color && palette.outline.toLowerCase() !== palette.color.toLowerCase()){
+      outlineTraces.push(makeTrace(entry.item,entry.isMonitor,true));
+    }
+    mainTraces.push(makeTrace(entry.item,entry.isMonitor,false));
+  }
+  const traces = [...outlineTraces,...mainTraces];
+  const mobile = state.mode === "mobile";
+  const layout = {
+    autosize:true,
+    height:mobile ? 410 : 500,
+    paper_bgcolor:"#151518",plot_bgcolor:"#151518",
+    margin:{l:58,r:22,t:18,b:55},
+    font:{family:"Inter, Arial, sans-serif",color:"#d8d8de",size:11},
+    hovermode:"x",
+    hoverlabel:{bgcolor:"#242429",bordercolor:"#50505a",font:{color:"#fff",size:11}},
+    xaxis:{type:"date",gridcolor:"#303037",linecolor:"#303037",tickfont:{color:"#a1a1aa",size:10},zeroline:false,showgrid:false,automargin:true},
+    yaxis:{title:{text:"Рейтинг, %",font:{size:11,color:"#a1a1aa"}},ticksuffix:"%",gridcolor:"#303037",linecolor:"#303037",tickfont:{color:"#a1a1aa",size:10},zeroline:false,automargin:true},
     showlegend:false,
-    connectgaps:false,
-    legendgroup:(isMonitor?"monitor-":"competitor-")+norm(series.raw),
-    line:{
-      color:style.color,
-      width:style.width,
-      dash:style.dash
-    },
-    marker:{
-      color:style.color,
-      size:isMonitor?7:6,
-      symbol:style.marker,
-      line:{
-        color:isMonitor?"#fff":style.outline,
-        width:isMonitor?0:1
-      }
-    },
-    text:dates.map(()=>`${label}<br>${original}<br>${category}${family}${epgroup}`),
-    hovertemplate:"%{text}<br>%{x|%d.%m.%Y}<br>Рейтинг: %{y:.1f}%<extra></extra>"
+    dragmode:"pan"
   };
-
-  return {trace,style,label,category,meta,isMonitor,raw:series.raw};
-}
-
-function addLegendGroup(container,title,items){
-  if(!items.length)return;
-
-  const heading=document.createElement("div");
-  heading.className="legend-section-title";
-  heading.textContent=title;
-  container.appendChild(heading);
-
-  const wrap=document.createElement("div");
-  wrap.className="legend-items";
-
-  items.forEach(item=>{
-    const node=document.createElement("div");
-    node.className="legend-item";
-
-    const sample=document.createElement("span");
-    sample.className="legend-sample"+
-      (item.style.dash==="dash"?" dash":item.style.dash==="dot"?" dot":"")+
-      (item.style.outline!==item.style.color?" outlined":"");
-
-    sample.style.borderTopColor=item.style.color;
-    sample.style.borderTopWidth=(item.isMonitor?4:3)+"px";
-
-    if(item.style.outline!==item.style.color){
-      sample.style.textShadow="0 0 1px "+item.style.outline;
-    }
-
-    const copy=document.createElement("div");
-    copy.className="legend-copy";
-
-    const name=document.createElement("div");
-    name.className="legend-name";
-    name.textContent=item.label;
-
-    const cat=document.createElement("div");
-    cat.className="legend-category";
-    cat.textContent=item.isMonitor?"Партия мониторинга":item.category;
-
-    copy.append(name,cat);
-    node.append(sample,copy);
-    wrap.appendChild(node);
-  });
-
-  container.appendChild(wrap);
-}
-
-function renderLegend(partyItems,competitorItems){
-  const el=$("legend");
-  el.innerHTML="";
-  addLegendGroup(el,"Партии мониторинга · белые линии",partyItems);
-  addLegendGroup(el,"Крупнейшие конкуренты · цвет по политической категории",competitorItems);
-}
-function renderCountry(){
-  if(!selectedCountry)return;
-
-  const c=countryMeta(selectedCountry);
-
-  $("pageTitle").textContent=selectedCountry;
-  $("pageSubtitle").textContent="Динамика всех партий мониторинга и их крупнейших конкурентов";
-  $("selectedCountryName").textContent=selectedCountry;
-  $("selectedCountryFlag").innerHTML=
-    `<img class="flag" src="${flagData(c.code)}" alt="Флаг ${selectedCountry}">`;
-  $("chartTitle").textContent=`Электоральная поддержка · ${selectedCountry}`;
-
-  const built=buildCountryData(selectedCountry);
-
-  if(!built){
-    $("chart").innerHTML='<div class="empty">Для этой страны пока нет наблюдений.</div>';
-    return;
-  }
-
-  const latestByParty=built.latestRows.map(r=>({
-    ...r,
-    meta:getMeta(selectedCountry,r.party,"Партия мониторинга"),
-    gap:r.competitorRating===null?null:r.rating-r.competitorRating
-  }));
-
-  const leader=[...latestByParty].sort((a,b)=>b.rating-a.rating)[0];
-
-  const bestGap=[...latestByParty]
-    .filter(r=>r.gap!==null)
-    .sort((a,b)=>b.gap-a.gap)[0];
-
-  setMetric(
-    "leaderValue",
-    leader?formatPct(leader.rating):"—",
-    leader?(leader.meta.label||leader.party):"Среди партий мониторинга"
-  );
-
-  setMetric(
-    "gapValue",
-    bestGap?formatGap(bestGap.gap):"—",
-    bestGap?(bestGap.meta.label||bestGap.party):"Разница рейтингов, п. п.",
-    bestGap?(bestGap.gap>=0?"#fff":"#ff7777"):"#fff"
-  );
-
-  setMetric(
-    "dateValue",
-    formatDate(built.latestDate,false),
-    formatDate(built.latestDate,true)
-  );
-
-  const dateMap=new Map();
-  built.rows.forEach(r=>dateMap.set(dateKey(r.date),r.date));
-
-  const dates=[...dateMap.values()].sort((a,b)=>a-b);
-
-  const partyItems=built.partySeries.map(s=>makeTrace(s,true,dates));
-  const competitorItems=built.competitorSeries.map(s=>makeTrace(s,false,dates));
-
-  const traces=[];
-
-  /* Сначала конкуренты: белые линии мониторинга будут нарисованы поверх них. */
-  competitorItems.forEach(item=>{
-    if(item.style.outline!==item.style.color){
-      traces.push({
-        x:item.trace.x,
-        y:item.trace.y,
-        type:"scatter",
-        mode:"lines",
-        showlegend:false,
-        hoverinfo:"skip",
-        connectgaps:false,
-        line:{
-          color:item.style.outline,
-          width:item.style.width+3,
-          dash:item.style.dash
-        }
-      });
-    }
-    traces.push(item.trace);
-  });
-
-  partyItems.forEach(item=>traces.push(item.trace));
-
-  const maxValue=Math.max(
-    40,
-    ...built.rows.map(r=>Math.max(r.rating,r.competitorRating??0))
-  );
-
-  const yMax=Math.ceil((maxValue+5)/5)*5;
-  const isMobile=currentMode==="mobile";
-
-  const layout={
-    paper_bgcolor:"#151518",
-    plot_bgcolor:"#151518",
-    font:{
-      color:"#dedee3",
-      family:"Inter,Arial,sans-serif",
-      size:isMobile?10:11
-    },
-    margin:{
-      l:isMobile?43:58,
-      r:18,
-      t:18,
-      b:isMobile?54:70
-    },
-    hovermode:"x unified",
-    showlegend:false,
-    dragmode:"pan",
-    uirevision:selectedCountry,
-
-    xaxis:{
-      type:"date",
-      showgrid:false,
-      zeroline:false,
-      color:"#a0a0a9",
-      tickformat:isMobile?"%d.%m":"%d.%m.%y",
-      tickfont:{size:isMobile?9:10},
-      rangeslider:{
-        visible:!isMobile,
-        thickness:.08,
-        bgcolor:"#202026",
-        bordercolor:"#34343b"
-      },
-      fixedrange:false
-    },
-
-    yaxis:{
-      title:{
-        text:"Рейтинг, %",
-        font:{size:isMobile?10:11}
-      },
-      range:[0,yMax],
-      dtick:5,
-      gridcolor:"#303037",
-      zeroline:false,
-      color:"#a0a0a9",
-      ticksuffix:"%",
-      fixedrange:false
-    },
-
-    hoverlabel:{
-      bgcolor:"#242429",
-      bordercolor:"#55555e",
-      font:{color:"#fff",size:11}
-    },
-
-    shapes:[]
+  const config = {
+    responsive:true,displaylogo:false,scrollZoom:true,
+    modeBarButtonsToRemove:["select2d","lasso2d","autoScale2d"]
   };
-
-  const config={
-    responsive:true,
-    displaylogo:false,
-    scrollZoom:!isMobile,
-    displayModeBar:!isMobile,
-    modeBarButtonsToRemove:[
-      "lasso2d",
-      "select2d",
-      "autoScale2d",
-      "toggleSpikelines"
-    ],
-    doubleClick:"reset"
-  };
-
-  if(typeof Plotly==="undefined"){
-    $("chart").innerHTML=
-      '<div class="empty">Не загрузилась библиотека графиков Plotly. Проверьте подключение к интернету.</div>';
-    return;
-  }
-
   Plotly.react("chart",traces,layout,config);
-
-  renderLegend(partyItems,competitorItems);
-
-  const countryParties=built.partySeries.length;
-  const uniqueCompetitors=built.competitorSeries.length;
-
-  const warning=built.conflicts
-    ?` · предупреждение: ${built.conflicts} расхождений в повторяющихся значениях конкурентов`
-    :"";
-
-  const sourceNote=loadWarnings.length
-    ?" · используются встроенные справочники"
-    :"";
-
-  setStatus(
-    `Загружено ${built.rows.length} строк · ${countryParties} партий мониторинга · ${uniqueCompetitors} уникальных конкурентов · ${dates.length} дат${warning}${sourceNote}`,
-    built.conflicts?"warn":"normal",
-    `Последний замер: ${formatDate(built.latestDate)}`
-  );
+  renderLegend(series);
 }
+function renderCountry(country){
+  if(!country) return;
+  state.selectedCountry = country;
+  const meta = countryMeta(country);
+  const series = buildSeries(country);
+  $("pageTitle").textContent = country;
+  $("pageSubtitle").textContent = "Динамика электоральной поддержки партий мониторинга и их конкурентов";
+  $("chartTitle").textContent = `Электоральная поддержка · ${country}`;
+  $("selectedCountryName").textContent = country;
+  $("selectedCountryFlag").innerHTML = `<img class="flag" src="${flagData(meta.code)}" alt="Флаг ${escapeHtml(country)}">`;
+  renderMetrics(series);
+  renderChart(series);
+  renderCountryButtons();
+}
+function renderCountryButtons(){
+  const search = norm($("countrySearch").value || "");
+  const counts = new Map();
+  for(const row of state.rows){
+    if(!counts.has(row.country)) counts.set(row.country,new Set());
+    counts.get(row.country).add(row.party);
+  }
+  const available = COUNTRIES.filter(country=>counts.has(country.key));
+  const desktop = $("countryListDesktop");
+  const mobile = $("countryListMobile");
+  const mobileScroll = mobile.scrollLeft;
+  desktop.innerHTML = "";
+  mobile.innerHTML = "";
 
+  for(const country of available){
+    if(search && !norm(country.key).includes(search)) continue;
+    const count = counts.get(country.key)?.size || 0;
+    const flag = `<img class="flag" src="${flagData(country.code)}" alt="Флаг ${escapeHtml(country.key)}">`;
+
+    const desktopButton = document.createElement("button");
+    desktopButton.type = "button";
+    desktopButton.className = "country-btn" + (country.key===state.selectedCountry ? " active" : "");
+    desktopButton.innerHTML = `${flag}<span class="country-name">${escapeHtml(country.key)}</span><span class="country-count">${count} ${count===1?"партия":count>=2&&count<=4?"партии":"партий"}</span>`;
+    desktopButton.addEventListener("click",()=>renderCountry(country.key));
+    desktop.appendChild(desktopButton);
+
+    const mobileButton = document.createElement("button");
+    mobileButton.type = "button";
+    mobileButton.className = "mobile-country-btn" + (country.key===state.selectedCountry ? " active" : "");
+    mobileButton.innerHTML = `${flag}<span>${escapeHtml(country.key)}</span>`;
+    mobileButton.addEventListener("click",()=>renderCountry(country.key));
+    mobile.appendChild(mobileButton);
+  }
+  mobile.scrollLeft = mobileScroll;
+}
+function showWelcome(){
+  $("welcome").classList.remove("hidden");
+  $("app").classList.add("hidden");
+  $("welcome").scrollTop = 0;
+}
 function applyMode(mode,save=true){
-  currentMode=mode;
-
-  document.body.classList.toggle("mode-mobile",mode==="mobile");
-  document.body.classList.toggle("mode-desktop",mode==="desktop");
-
+  state.mode = mode === "mobile" ? "mobile" : "desktop";
+  document.body.classList.toggle("mode-mobile",state.mode==="mobile");
   $("welcome").classList.add("hidden");
   $("app").classList.remove("hidden");
-
   if(save){
-    try{
-      localStorage.setItem(STORAGE_KEY,mode);
-    }catch(e){}
+    try{localStorage.setItem(STORAGE_KEY,state.mode);}catch(error){console.warn("Не удалось сохранить формат просмотра",error);}
   }
-
-  $("switchMode").textContent=
-    mode==="mobile"?"Компьютерная версия":"Мобильная версия";
-
-  if(allRows.length&&selectedCountry){
-    renderCountryButtons();
-    renderCountry();
-  }else if(!allRows.length){
-    loadData();
-  }
-
-  setTimeout(()=>{
-    if(window.Plotly&&$("chart")){
-      Plotly.Plots.resize("chart");
+  if(state.rows.length){
+    if(!state.selectedCountry){
+      const first = COUNTRIES.find(country=>state.rows.some(row=>row.country===country.key));
+      state.selectedCountry = first?.key || state.rows[0].country;
     }
-  },180);
+    renderCountry(state.selectedCountry);
+    setTimeout(()=>{if(window.Plotly) Plotly.Plots.resize($("chart"));},50);
+  }
 }
-
-function showModeChooser(){
-  $("welcome").classList.remove("hidden");
+function showLoadError(error){
+  console.error("Ошибка загрузки «Правого барометра»:",error);
+  if(state.rows.length && state.selectedCountry){
+    // При неудачном повторном обновлении сохраняем последний успешно загруженный набор.
+    if(!$("app").classList.contains("hidden")) renderCountry(state.selectedCountry);
+    if(state.lastSuccessfulLoad){
+      $("updatedAt").textContent = "Дата обновления: " + formatDate(state.lastSuccessfulLoad,true);
+    }
+    return;
+  }
+  setEmpty(`Не удалось загрузить данные из Google Sheets. ${error.message || "Проверьте опубликованные вкладки и доступ к ним."}`,true);
+  $("leaderValue").textContent = "—";
+  $("leaderNote").textContent = "Данные пока недоступны";
+  $("gapValue").textContent = "—";
+  $("gapNote").textContent = "Данные пока недоступны";
+  $("dateValue").textContent = "—";
+  $("dateNote").textContent = "Нет доступных данных";
+  $("updatedAt").textContent = "Дата обновления: —";
 }
-
-function getSavedMode(){
+async function fetchTSV(url){
+  const separator = url.includes("?") ? "&" : "?";
+  const response = await fetch(url + separator + "_=" + Date.now(),{cache:"no-store"});
+  if(!response.ok) throw new Error(`HTTP ${response.status}`);
+  return await response.text();
+}
+async function loadAll(){
+  if(state.loading) return;
+  state.loading = true;
+  $("refresh").disabled = true;
+  $("refresh").textContent = "Загрузка…";
   try{
-    const m=localStorage.getItem(STORAGE_KEY);
-    return m==="mobile"||m==="desktop"?m:null;
-  }catch(e){
-    return null;
-  }
-}
+    const [dataText,directoryText,paletteText] = await Promise.all([
+      fetchTSV(DATA_TSV_URL),
+      fetchTSV(DIRECTORY_TSV_URL),
+      fetchTSV(PALETTE_TSV_URL)
+    ]);
+    const rawData = parseTSV(dataText,"Данные");
+    const rawDirectory = parseTSV(directoryText,"Справочник");
+    const rawPalette = parseTSV(paletteText,"Палитра");
 
-async function loadData(){
-  const btn=$("refresh");
-  btn.disabled=true;
+    const rows = transformData(rawData);
+    const directory = loadDirectory(rawDirectory);
+    const palette = loadPalette(rawPalette);
 
-  setStatus("Загружаем рейтинги и справочники из Google Sheets…");
+    state.rows = rows;
+    state.directory = directory;
+    state.palette = palette;
+    state.lastSuccessfulLoad = new Date();
 
-  try{
-    const dataText=await fetchTSV(DATA_TSV_URL);
-    const dataParsed=parseTSV(dataText);
-
-    allRows=transformData(dataParsed);
-
-    if(!allRows.length){
-      throw new Error("В опубликованной вкладке не найдены строки с рейтингами.");
+    const firstAvailable = COUNTRIES.find(country=>rows.some(row=>row.country===country.key));
+    if(!state.selectedCountry || !rows.some(row=>row.country===state.selectedCountry)){
+      state.selectedCountry = firstAvailable?.key || rows[0].country;
     }
-
-    await loadOptionalSources();
-
-    const available=COUNTRIES.filter(
-      c=>allRows.some(r=>r.country===c.key)
-    );
-
-    if(!selectedCountry||!available.some(c=>c.key===selectedCountry)){
-      selectedCountry=available[0]?.key||allRows[0].country;
-    }
-
     renderCountryButtons();
-    renderCountry();
-
-    $("updatedAt").textContent=
-      "Обновлено: "+new Date().toLocaleString("ru-RU");
-
-    if(loadWarnings.length){
-      setStatus(
-        `Данные загружены: ${allRows.length} наблюдений · ${available.length} стран. ${loadWarnings.join(" ")}`,
-        "warn",
-        `Обновлено: ${new Date().toLocaleTimeString("ru-RU")}`
-      );
-    }
-
-  }catch(e){
-    setStatus("Ошибка загрузки: "+e.message,"error");
-
-    $("chart").innerHTML=
-      '<div class="empty">Не удалось загрузить данные. Проверьте опубликованную TSV-ссылку вкладки «Данные» и доступность Google Sheets.</div>';
-
-    $("legend").innerHTML="";
-
+    $("updatedAt").textContent = "Дата обновления: " + formatDate(state.lastSuccessfulLoad,true);
+    if(!$("app").classList.contains("hidden")) renderCountry(state.selectedCountry);
+  }catch(error){
+    showLoadError(error);
   }finally{
-    btn.disabled=false;
+    state.loading = false;
+    $("refresh").disabled = false;
+    $("refresh").textContent = "↻ Обновить";
   }
 }
 
-$("chooseDesktop").addEventListener(
-  "click",
-  ()=>applyMode("desktop")
-);
+/* События интерфейса */
+$("chooseDesktop").addEventListener("click",()=>applyMode("desktop"));
+$("chooseMobile").addEventListener("click",()=>applyMode("mobile"));
+$("switchMode").addEventListener("click",showWelcome);
+$("refresh").addEventListener("click",loadAll);
+$("countrySearch").addEventListener("input",renderCountryButtons);
 
-$("chooseMobile").addEventListener(
-  "click",
-  ()=>applyMode("mobile")
-);
+let savedMode = "";
+try{savedMode = localStorage.getItem(STORAGE_KEY) || "";}catch(error){console.warn("Локальное хранилище недоступно",error);}
+if(savedMode === "desktop" || savedMode === "mobile") applyMode(savedMode,false);
 
-$("switchMode").addEventListener(
-  "click",
-  showModeChooser
-);
-
-$("refresh").addEventListener(
-  "click",
-  loadData
-);
-
-$("countrySearch").addEventListener(
-  "input",
-  renderCountryButtons
-);
-
+loadAll();
+setInterval(loadAll,REFRESH_EVERY_MINUTES*60*1000);
 window.addEventListener("resize",()=>{
-  if(window.Plotly&&$("chart")){
-    Plotly.Plots.resize("chart");
-  }
+  if(window.Plotly && !$("app").classList.contains("hidden")) Plotly.Plots.resize($("chart"));
 });
-
-const savedMode=getSavedMode();
-
-if(savedMode){
-  applyMode(savedMode,false);
-}else{
-  showModeChooser();
-}
-
-setInterval(()=>{
-  if(!$("app").classList.contains("hidden")){
-    loadData();
-  }
-},REFRESH_EVERY_MINUTES*60*1000);
-
 </script>
 </body>
 </html>
