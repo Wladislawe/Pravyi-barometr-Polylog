@@ -374,7 +374,7 @@
             <div id="chart"><div class="empty">График появится после загрузки данных.</div></div>
           </section>
 
-          <div id="chartFootnote" class="footnote">Источник: электоральные рейтинги Politico. В режиме «Отрыв» показываются партия и указанный для неё крупнейший конкурент; их разница рассчитывается по данным вкладки «Интерактив».</div>
+          <div id="chartFootnote" class="footnote">Источник: POLITICO. Для Бельгии и Нидерландов показана прогнозируемая доля мест в парламенте (seat share), а не доля голосов. Для Франции используются президентские опросы с марта 2026 года. В режиме «Отрыв» сравниваются партии мониторинга и указанные для них конкуренты.</div>
           <div class="footer">
             <span>«Правый барометр» · Полилог.Экспертиза</span>
             <span id="updatedAt">Дата обновления: —</span>
@@ -387,13 +387,13 @@
 <script>
 /*
   Источники:
-  - Интерактив: опубликованная вкладка с рейтингом партии и названием/рейтингом конкурента.
+  - Историческая база всех партий: опубликованная TSV-вкладка в длинном формате.
   - Справочник и Палитра: опубликованные TSV-вкладки.
-  - Коалиции и Портфели: Google Visualization endpoint по имени листа.
+  - Коалиции и Портфели: Google Visualization endpoint по имени листа (CSV).
 
-  В коде нет локальной копии партийного справочника или палитры.
+  Рейтинги партий мониторинга и конкурентов собираются из исторической базы по ключам справочника.
 */
-const INTERACTIVE_TSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR71VbBZh1Sr4R-yJKms30GvlFBgc38a6Xj-8K4eFCmEs3t50nTRPeeMejOUN6oZn4phLcNiD8GpMXO/pub?gid=1329304001&single=true&output=tsv";
+const ALL_PARTIES_TSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR71VbBZh1Sr4R-yJKms30GvlFBgc38a6Xj-8K4eFCmEs3t50nTRPeeMejOUN6oZn4phLcNiD8GpMXO/pub?gid=1329304001&single=true&output=tsv";
 const DIRECTORY_TSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR71VbBZh1Sr4R-yJKms30GvlFBgc38a6Xj-8K4eFCmEs3t50nTRPeeMejOUN6oZn4phLcNiD8GpMXO/pub?gid=992499234&single=true&output=tsv";
 const PALETTE_TSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR71VbBZh1Sr4R-yJKms30GvlFBgc38a6Xj-8K4eFCmEs3t50nTRPeeMejOUN6oZn4phLcNiD8GpMXO/pub?gid=261961581&single=true&output=tsv";
 const GOOGLE_SHEET_ID = "1EYeAHHa252GlRykUJx38S4XxM8C-N324UtijK84pKC4";
@@ -412,6 +412,20 @@ const COUNTRIES = [
   {key:"Норвегия",code:"no"}, {key:"Португалия",code:"pt"},
   {key:"Франция",code:"fr"}, {key:"Швеция",code:"se"}
 ];
+
+/*
+  В опубликованной исторической базе названия некоторых партий отличаются
+  от ключей пользовательского справочника. Здесь задано явное соответствие.
+*/
+const PARTY_NAME_ALIASES = {
+  "Бельгия": {"VB":"Vlaams Belang"},
+  "Великобритания": {"Reform UK":"Ref","Labour":"Lab"},
+  "Дания": {"Socialdemokratiet (A)":"SD (A)"},
+  "Испания": {"Vox":"VOX"},
+  "Португалия": {"Chega":"CH"},
+  "Нидерланды": {"PRO (Progressief Nederland)":"PRO"},
+  "Франция": {"RN":"Le Pen","NFP":"Mélenchon"}
+};
 
 const FLAG_SVGS = {
   at:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 40"><rect width="60" height="40" fill="#ed2939"/><rect y="13.33" width="60" height="13.34" fill="#fff"/></svg>',
@@ -509,15 +523,118 @@ function findHeader(headers,candidates,exclude=[]){
 }
 function parseTable(text,sourceName,slashIsUS=false){
   if(!text||/<html|<!doctype/i.test(text.slice(0,500))) throw new Error(`${sourceName}: источник вернул HTML вместо таблицы.`);
-  // Источники интерактива и справочника опубликованы в формате TSV.
-  const result=Papa.parse(text,{header:true,delimiter:"\t",skipEmptyLines:true,transformHeader:h=>clean(h)});
+  // Опубликованные вкладки отдаются как TSV, а вкладки Коалиции/Портфели — как CSV.
+  const firstLine=text.split(/\r?\n/,1)[0]||"";
+  const delimiter=firstLine.includes("\t")?"\t":",";
+  const result=Papa.parse(text,{header:true,delimiter,skipEmptyLines:true,transformHeader:h=>clean(h)});
   if(result.errors?.length&&result.data.length===0) throw new Error(`${sourceName}: ${result.errors[0].message}`);
   if(!result.meta.fields?.length) throw new Error(`${sourceName}: не найдены заголовки столбцов.`);
   return result.data.filter(row=>Object.values(row).some(v=>clean(v)!=="")).map(row=>({...row,__slashIsUS:slashIsUS}));
 }
-function transformData(data){
-  if(!data.length) throw new Error("Вкладка «Интерактив» пуста.");
+function transformData(data,directory){
+  if(!data.length) throw new Error("Опубликованная вкладка с историческими рейтингами пуста.");
   const headers=Object.keys(data[0]).filter(h=>!h.startsWith("__"));
+
+  // Новый формат: одна строка = одна партия на одну дату.
+  const longDate=findHeader(headers,["дата_среза","дата среза"]);
+  const longCountry=findHeader(headers,["страна","country"]);
+  const longParty=findHeader(headers,["партия","party"]);
+  const longValue=findHeader(headers,["значение","value"]);
+  const longUnit=findHeader(headers,["единица","unit"]);
+
+  if(longDate&&longCountry&&longParty&&longValue){
+    const measureCol=findHeader(headers,["measure"]);
+    const indicatorCol=findHeader(headers,["тип_показателя","тип показателя","indicator"]);
+    const sourceDateCol=findHeader(headers,["дата_источника","дата источника","source date"]);
+    const staleCol=findHeader(headers,["дней_с_последнего_наблюдения","дней с последнего наблюдения","stale days"]);
+
+    const rawRows=data.map(row=>{
+      const date=parseDate(row[longDate],row.__slashIsUS);
+      const country=normalizeCountry(row[longCountry]);
+      const party=clean(row[longParty]);
+      const value=parseNum(row[longValue]);
+      const unit=longUnit?clean(row[longUnit]):"%";
+      if(!date||!country||!party||value===null) return null;
+      if(unit&&unit!=="%"&&norm(unit)!=="percent") return null;
+      return {
+        date,country,party,rating:value,
+        measure:measureCol?clean(row[measureCol]):"",
+        indicator:indicatorCol?clean(row[indicatorCol]):"",
+        unit,
+        sourceDate:sourceDateCol?parseDate(row[sourceDateCol],row.__slashIsUS):null,
+        staleDays:staleCol?parseNum(row[staleCol]):null
+      };
+    }).filter(Boolean);
+
+    if(!rawRows.length) throw new Error("В исторической базе не найдены строки с датой, страной, партией и значением.");
+
+    const namesByCountry=new Map();
+    const valuesByKey=new Map();
+    for(const row of rawRows){
+      if(!namesByCountry.has(row.country)) namesByCountry.set(row.country,new Map());
+      namesByCountry.get(row.country).set(norm(row.party),row.party);
+      valuesByKey.set(`${norm(row.country)}|${dateKey(row.date)}|${norm(row.party)}`,row);
+    }
+
+    const resolveParty=(meta)=>{
+      const requested=PARTY_NAME_ALIASES[meta.country]?.[meta.key]||meta.key;
+      const names=namesByCountry.get(meta.country);
+      const actual=names?.get(norm(requested));
+      if(!actual){
+        const available=names?[...names.values()].slice(0,30).join(", "):"нет строк по стране";
+        throw new Error(`Не удалось сопоставить «${meta.key}» (${meta.country}) с партией в исторической базе. Искомое название: «${requested}». Доступные названия: ${available}`);
+      }
+      return actual;
+    };
+
+    const monitors=directory.filter(isMonitor);
+    const competitors=directory.filter(meta=>norm(meta.role).includes("конкурент"));
+    if(!monitors.length) throw new Error("В «Справочнике» не найдены партии мониторинга.");
+
+    const resolved=new Map();
+    const actualName=meta=>{
+      const id=`${meta.country}|${norm(meta.key)}`;
+      if(!resolved.has(id)) resolved.set(id,resolveParty(meta));
+      return resolved.get(id);
+    };
+
+    const paired=[];
+    for(const monitor of monitors){
+      const countryCompetitors=competitors.filter(meta=>meta.country===monitor.country);
+      if(countryCompetitors.length!==1){
+        throw new Error(`${monitor.country}: в «Справочнике» должно быть ровно по одному конкуренту для партий мониторинга; найдено: ${countryCompetitors.length}.`);
+      }
+      const competitor=countryCompetitors[0];
+      const monitorName=actualName(monitor);
+      const competitorName=actualName(competitor);
+      const monitorRows=rawRows.filter(row=>row.country===monitor.country&&norm(row.party)===norm(monitorName));
+
+      if(!monitorRows.length) throw new Error(`В исторической базе нет значений партии «${monitor.key}» (${monitor.country}).`);
+
+      for(const row of monitorRows){
+        const key=`${norm(monitor.country)}|${dateKey(row.date)}|${norm(competitorName)}`;
+        const competitorRow=valuesByKey.get(key);
+        paired.push({
+          date:row.date,
+          country:monitor.country,
+          party:monitor.key,
+          rating:row.rating,
+          competitor:competitor.key,
+          competitorRating:competitorRow?competitorRow.rating:null,
+          measure:row.measure,
+          indicator:row.indicator,
+          unit:row.unit,
+          sourceDate:row.sourceDate,
+          staleDays:row.staleDays
+        });
+      }
+    }
+
+    if(!paired.length) throw new Error("Не удалось сформировать пары партий мониторинга и конкурентов из исторической базы.");
+    return paired.sort((a,b)=>a.date-b.date||a.country.localeCompare(b.country,"ru")||a.party.localeCompare(b.party,"ru"));
+  }
+
+  // Совместимость со старым широким форматом: одна строка = партия + конкурент.
   const columns={
     date:findHeader(headers,["дата","date"]),
     country:findHeader(headers,["страна","country"]),
@@ -527,7 +644,7 @@ function transformData(data){
     competitorRating:findHeader(headers,["рейтинг конкурента","competitor rating","competitorRating","competitor_rating","rating competitor","rating_competitor","rating of competitor"])
   };
   const missing=Object.entries(columns).filter(([k,v])=>!v&&k!=="competitor").map(([k])=>k);
-  if(missing.length) throw new Error("Во вкладке «Интерактив» не найдены столбцы: "+missing.join(", ")+". Заголовки, полученные из таблицы: "+headers.join(" | "));
+  if(missing.length) throw new Error("Не распознан формат таблицы. Для исторической базы нужны столбцы «Дата_среза», «Страна», «Партия», «Значение». Полученные заголовки: "+headers.join(" | "));
   const rows=data.map(row=>{
     const date=parseDate(row[columns.date],row.__slashIsUS);
     const rating=parseNum(row[columns.rating]);
@@ -809,8 +926,8 @@ function renderChart(series){
   });
   renderLegend(series);
   $("chartTitle").textContent=state.chartMode==="gap"?`Отрыв от крупнейшего конкурента · ${state.selectedCountry}`:`Электоральная поддержка · ${state.selectedCountry}`;
-  $("chartHint").textContent=state.chartMode==="gap"?"Оставлены только партии мониторинга и их крупнейшие конкуренты. Расстояние между линиями показывает отрыв.":"Белые линии — партии мониторинга; цветные — конкуренты и другие партии. Нижняя шкала управляет временным диапазоном.";
-  $("chartModeExplainer").textContent=state.chartMode==="gap"?"Пара линий: партия и её конкурент; отрыв — разница между рейтингами.":"Показаны рейтинги всех партий, внесённых во вкладку «Интерактив».";
+  $("chartHint").textContent=state.chartMode==="gap"?"Оставлены только партии мониторинга и их крупнейшие конкуренты. Расстояние между линиями показывает отрыв.":"Белые линии — партии мониторинга; цветные — выбранные для сравнения конкуренты. Нижняя шкала управляет временным диапазоном.";
+  $("chartModeExplainer").textContent=state.chartMode==="gap"?"Пара линий: партия и её конкурент; отрыв — разница между рейтингами.":"Показаны рейтинги партий мониторинга и выбранных для сравнения конкурентов.";
   $("ratingMode").classList.toggle("active",state.chartMode==="rating");
   $("gapMode").classList.toggle("active",state.chartMode==="gap");
   $("ratingMode").setAttribute("aria-pressed",String(state.chartMode==="rating"));
@@ -996,11 +1113,11 @@ async function loadAll(){
   $("refresh").disabled=true;$("refresh").textContent="Загрузка…";
   state.dataWarnings=[];
   try{
-    const [interactiveText,directoryText,paletteText]=await Promise.all([
-      fetchText(INTERACTIVE_TSV_URL),fetchText(DIRECTORY_TSV_URL),fetchText(PALETTE_TSV_URL)
+    const [allPartiesText,directoryText,paletteText]=await Promise.all([
+      fetchText(ALL_PARTIES_TSV_URL),fetchText(DIRECTORY_TSV_URL),fetchText(PALETTE_TSV_URL)
     ]);
-    const rows=transformData(parseTable(interactiveText,"Интерактив"));
     const directory=loadDirectory(parseTable(directoryText,"Справочник"));
+    const rows=transformData(parseTable(allPartiesText,"Интерактив — все партии"),directory);
     const palette=loadPalette(parseTable(paletteText,"Палитра"));
     state.rows=rows;state.directory=directory;state.palette=palette;
 
