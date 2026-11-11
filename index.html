@@ -487,21 +487,30 @@ function formatGap(value){
   const prefix=value>0?"+":value<0?"−":"";
   return prefix+formatNumber(Math.abs(value),1)+" п. п.";
 }
+function headerToken(value){
+  return norm(value).replace(/[^a-zа-я0-9]/g,"");
+}
 function findHeader(headers,candidates,exclude=[]){
-  const normalized=headers.map(h=>norm(h));
-  for(const candidate of candidates){
-    const i=normalized.findIndex(h=>h===norm(candidate)&&!exclude.some(x=>h.includes(norm(x))));
-    if(i>=0) return headers[i];
+  const prepared=headers.map(raw=>({raw,token:headerToken(raw)}));
+  const excluded=exclude.map(headerToken).filter(Boolean);
+  const allowed=item=>!excluded.some(token=>item.token.includes(token));
+  const candidateTokens=candidates.map(headerToken).filter(Boolean);
+  // Сначала ищем полное совпадение, затем — совпадение по части названия.
+  // Нормализация учитывает пробелы, подчёркивания, скобки и camelCase.
+  for(const candidate of candidateTokens){
+    const found=prepared.find(item=>item.token===candidate&&allowed(item));
+    if(found) return found.raw;
   }
-  for(const candidate of candidates){
-    const i=normalized.findIndex(h=>h.includes(norm(candidate))&&!exclude.some(x=>h.includes(norm(x))));
-    if(i>=0) return headers[i];
+  for(const candidate of candidateTokens){
+    const found=prepared.find(item=>item.token.includes(candidate)&&allowed(item));
+    if(found) return found.raw;
   }
   return null;
 }
 function parseTable(text,sourceName,slashIsUS=false){
   if(!text||/<html|<!doctype/i.test(text.slice(0,500))) throw new Error(`${sourceName}: источник вернул HTML вместо таблицы.`);
-  const result=Papa.parse(text,{header:true,skipEmptyLines:true,transformHeader:h=>clean(h)});
+  // Источники интерактива и справочника опубликованы в формате TSV.
+  const result=Papa.parse(text,{header:true,delimiter:"\t",skipEmptyLines:true,transformHeader:h=>clean(h)});
   if(result.errors?.length&&result.data.length===0) throw new Error(`${sourceName}: ${result.errors[0].message}`);
   if(!result.meta.fields?.length) throw new Error(`${sourceName}: не найдены заголовки столбцов.`);
   return result.data.filter(row=>Object.values(row).some(v=>clean(v)!=="")).map(row=>({...row,__slashIsUS:slashIsUS}));
@@ -513,12 +522,12 @@ function transformData(data){
     date:findHeader(headers,["дата","date"]),
     country:findHeader(headers,["страна","country"]),
     party:findHeader(headers,["партия","party"]),
-    rating:findHeader(headers,["рейтинг партии","рейтинг","party rating"],["конкурент"]),
-    competitor:findHeader(headers,["конкурент","название конкурента","партия конкурента","competitor name"]),
-    competitorRating:findHeader(headers,["рейтинг конкурента","competitor rating"])
+    rating:findHeader(headers,["рейтинг партии","рейтинг","party rating","party_rating","rating party","rating_party","rating","rating of party"],["конкурент","competitor"]),
+    competitor:findHeader(headers,["название конкурента","партия конкурента","competitor name","competitorName","competitor party","competitor_party","конкурент","competitor"],["рейтинг конкурента","competitor rating","competitorRating","competitor_rating"]),
+    competitorRating:findHeader(headers,["рейтинг конкурента","competitor rating","competitorRating","competitor_rating","rating competitor","rating_competitor","rating of competitor"])
   };
   const missing=Object.entries(columns).filter(([k,v])=>!v&&k!=="competitor").map(([k])=>k);
-  if(missing.length) throw new Error("Во вкладке «Интерактив» не найдены столбцы: "+missing.join(", "));
+  if(missing.length) throw new Error("Во вкладке «Интерактив» не найдены столбцы: "+missing.join(", ")+". Заголовки, полученные из таблицы: "+headers.join(" | "));
   const rows=data.map(row=>{
     const date=parseDate(row[columns.date],row.__slashIsUS);
     const rating=parseNum(row[columns.rating]);
