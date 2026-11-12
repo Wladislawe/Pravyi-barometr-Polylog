@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- RELEASE 2026-11-12: ALL_PARTIES_2015 / PRESET_6M_RU_MONTHS / MONTHLY_BAROMETER_DAY_1 -->
 <html lang="ru">
 <head>
   <meta charset="utf-8">
@@ -123,6 +124,11 @@
     .chart-mode-btn:hover{color:#fff;background:#222228}
     .chart-mode-btn.active{background:#f04424;color:#fff;box-shadow:0 2px 10px rgba(240,68,36,.18)}
     .chart-mode-explainer{font-size:9px;color:#85858e;max-width:235px;line-height:1.35}
+    .time-switch{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto;padding:3px;border:1px solid #38383f;background:#101013;border-radius:10px}
+    .time-btn{border:0;background:transparent;color:#aaaab2;border-radius:7px;padding:8px 10px;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap}
+    .time-btn:hover{color:#fff;background:#24242a}
+    .time-btn.active{color:#fff;background:#f04424;box-shadow:0 2px 10px rgba(240,68,36,.18)}
+    .time-btn:focus-visible{outline:2px solid #fff;outline-offset:2px}
     .legend-wrap{padding:12px 18px 13px;border-bottom:1px solid #303037;background:#121215}
     .legend-section{margin-bottom:10px}
     .legend-section:last-child{margin-bottom:0}
@@ -176,6 +182,8 @@
     .mode-mobile .chart-title{font-size:12px}
     .mode-mobile .chart-hint{font-size:9px}
     .mode-mobile .chart-controls{width:100%;justify-content:space-between}
+    .mode-mobile .time-switch{margin:0;width:100%;justify-content:space-between}
+    .mode-mobile .time-btn{flex:1;padding:8px 7px;font-size:10px}
     .mode-mobile .chart-mode-explainer{max-width:150px;text-align:right}
     .mode-mobile .legend-wrap{padding:10px 12px 11px}
     .mode-mobile .legend-items{gap:9px 12px}
@@ -216,6 +224,8 @@
       .barometer-bottom{align-items:flex-start}
       .jump-btn{font-size:10px}
       .chart-controls{width:100%;justify-content:space-between}
+      .time-switch{width:100%;justify-content:space-between}
+      .time-btn{flex:1;padding:8px 6px;font-size:10px}
       #chart{height:470px}
       .metrics{grid-template-columns:1fr 1fr;gap:8px}
       .metric:last-child{grid-column:1/-1}
@@ -228,6 +238,7 @@
       .baro-kpi{min-height:88px}
       .baro-kpi-value{font-size:19px}
       .chart-mode-btn{padding:8px 9px;font-size:10px}
+      .time-btn{font-size:9px}
       #chart{height:445px}
       .legend-items{gap:8px 9px}
     }
@@ -322,7 +333,7 @@
           <div class="heading-row">
             <div>
               <h1>Динамика партий</h1>
-              <div id="pageSubtitle" class="subtitle">Рейтинги партий мониторинга и их крупнейших конкурентов</div>
+              <div id="pageSubtitle" class="subtitle">Рейтинги всех партий выбранной страны и динамика партий мониторинга</div>
             </div>
             <div class="heading-actions">
               <div id="selectedCountryPill" class="country-pill">
@@ -363,17 +374,23 @@
               </div>
               <div class="chart-controls">
                 <div class="chart-mode-switch" role="group" aria-label="Тип графика">
-                  <button id="ratingMode" class="chart-mode-btn" type="button" aria-pressed="false">Рейтинг</button>
-                  <button id="gapMode" class="chart-mode-btn active" type="button" aria-pressed="true">Отрыв</button>
+                  <button id="ratingMode" class="chart-mode-btn active" type="button" aria-pressed="true">Рейтинг</button>
+                  <button id="gapMode" class="chart-mode-btn" type="button" aria-pressed="false">Отрыв</button>
                 </div>
-                <div id="chartModeExplainer" class="chart-mode-explainer">Пара линий: партия и её конкурент; отрыв — разница между рейтингами.</div>
+                <div id="chartModeExplainer" class="chart-mode-explainer">Все партии выбранной страны. В режиме «Отрыв» — партии мониторинга и их конкуренты.</div>
+              </div>
+              <div class="time-switch" role="group" aria-label="Временной диапазон графика">
+                <button class="time-btn active" data-time="6m" type="button" aria-pressed="true">6 мес.</button>
+                <button class="time-btn" data-time="1y" type="button" aria-pressed="false">1 год</button>
+                <button class="time-btn" data-time="2y" type="button" aria-pressed="false">2 года</button>
+                <button class="time-btn" data-time="all" type="button" aria-pressed="false">Всё время</button>
               </div>
             </div>
             <div id="legend" class="legend-wrap"></div>
             <div id="chart"><div class="empty">График появится после загрузки данных.</div></div>
           </section>
 
-          <div id="chartFootnote" class="footnote">Источник: POLITICO. Для Бельгии и Нидерландов показана прогнозируемая доля мест в парламенте (seat share), а не доля голосов. Для Франции используются президентские опросы с марта 2026 года. В режиме «Отрыв» сравниваются партии мониторинга и указанные для них конкуренты.</div>
+          <div id="chartFootnote" class="footnote">Источник: POLITICO · Исторические данные с 2015 года.</div>
           <div class="footer">
             <span>«Правый барометр» · Полилог.Экспертиза</span>
             <span id="updatedAt">Дата обновления: —</span>
@@ -399,6 +416,7 @@ const GOOGLE_SHEET_ID = "1EYeAHHa252GlRykUJx38S4XxM8C-N324UtijK84pKC4";
 const COALITIONS_URL = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent("Коалиции")}`;
 const PORTFOLIOS_URL = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent("Портфели")}`;
 const REFRESH_EVERY_MINUTES = 10;
+const MIN_MONITORING_DATE = new Date(2015,0,1); // Нижняя граница отображаемого периода
 const STORAGE_KEY = "polylog-right-barometer-view-v2";
 const MODE_KEY = "polylog-right-barometer-mode-v2";
 const ROLE_WEIGHTS = {0:0,1:0.3,2:0.7,3:1};
@@ -442,8 +460,8 @@ const FLAG_SVGS = {
 };
 
 const state = {
-  rows:[], directory:[], palette:new Map(), coalitions:[], portfolios:[],
-  selectedCountry:"", chartMode:"gap", modePreference:"auto", effectiveMode:"desktop",
+  rows:[], allRows:[], directory:[], palette:new Map(), coalitions:[], portfolios:[],
+  selectedCountry:"", chartMode:"rating", timeRange:"6m", modePreference:"auto", effectiveMode:"desktop",
   lastSuccessfulLoad:null, loading:false, barometer:null, dataWarnings:[]
 };
 const $ = id => document.getElementById(id);
@@ -570,9 +588,9 @@ function transformData(data,directory){
         sourceDate:sourceDateCol?parseDate(row[sourceDateCol],row.__slashIsUS):null,
         staleDays:staleCol?parseNum(row[staleCol]):null
       };
-    }).filter(Boolean);
+    }).filter(Boolean).filter(row=>row.date>=MIN_MONITORING_DATE);
 
-    if(!rawRows.length) throw new Error("В исторической базе не найдены строки с датой, страной, партией и значением.");
+    if(!rawRows.length) throw new Error("В исторической базе не найдены строки с датой, страной, партией и значением начиная с 2015 года.");
 
     const namesByCountry=new Map();
     const codesByCountry=new Map();
@@ -609,6 +627,24 @@ function transformData(data,directory){
       return resolved.get(id);
     };
 
+    // Сохраняем весь массив партий для режима «Рейтинг».
+    // Если партия есть в справочнике, используем её ключ и русское название;
+    // для остальных сохраняем название из исторической базы.
+    const metaByActual=new Map();
+    for(const meta of directory){
+      try{
+        const actual=actualName(meta);
+        metaByActual.set(`${norm(meta.country)}|${norm(actual)}`,meta);
+      }catch(e){
+        // В справочнике могут быть партии без наблюдений в выбранном периоде.
+      }
+    }
+    const allRows=rawRows.map(row=>{
+      const meta=metaByActual.get(`${norm(row.country)}|${norm(row.party)}`)||
+        (row.partyCode?directory.find(m=>m.country===row.country&&norm(m.key)===norm(row.partyCode)):null);
+      return {...row,sourceParty:row.party,party:meta?.key||row.party};
+    });
+
     const paired=[];
     for(const monitor of monitors){
       const countryCompetitors=competitors.filter(meta=>meta.country===monitor.country);
@@ -642,7 +678,10 @@ function transformData(data,directory){
     }
 
     if(!paired.length) throw new Error("Не удалось сформировать пары партий мониторинга и конкурентов из исторической базы.");
-    return paired.sort((a,b)=>a.date-b.date||a.country.localeCompare(b.country,"ru")||a.party.localeCompare(b.party,"ru"));
+    return {
+      allRows:allRows.sort((a,b)=>a.date-b.date||a.country.localeCompare(b.country,"ru")||a.party.localeCompare(b.party,"ru")),
+      pairedRows:paired.sort((a,b)=>a.date-b.date||a.country.localeCompare(b.country,"ru")||a.party.localeCompare(b.party,"ru"))
+    };
   }
 
   // Совместимость со старым широким форматом: одна строка = партия + конкурент.
@@ -663,9 +702,10 @@ function transformData(data,directory){
     const competitorRating=columns.competitorRating?parseNum(row[columns.competitorRating]):null;
     if(!date||rating===null) return null;
     return {date,country:normalizeCountry(row[columns.country]),party:clean(row[columns.party]),rating,competitor,competitorRating};
-  }).filter(r=>r&&r.country&&r.party);
-  if(!rows.length) throw new Error("Во вкладке «Интерактив» нет корректных строк с датами и рейтингами.");
-  return rows.sort((a,b)=>a.date-b.date);
+  }).filter(r=>r&&r.country&&r.party&&r.date>=MIN_MONITORING_DATE);
+  if(!rows.length) throw new Error("Во вкладке «Интерактив» нет корректных строк с датами и рейтингами начиная с 2015 года.");
+  const sorted=rows.sort((a,b)=>a.date-b.date);
+  return {allRows:sorted,pairedRows:sorted};
 }
 function loadDirectory(data){
   if(!data.length) throw new Error("Вкладка «Справочник» пуста.");
@@ -776,7 +816,23 @@ function shortName(meta){
   const raw=clean(meta?.key||meta?.label||"");
   return raw.replace(/\s*\([^)]*\)\s*$/i,"").slice(0,22)||"Партия";
 }
-function getPalette(category){return state.palette.get(category)||{color:"#858B95",outline:"#858B95",width:2.3};}
+function colorForAdditionalParty(country,key){
+  const token=`${country}|${key}`;
+  let hash=2166136261;
+  for(const char of token){hash=Math.imul(hash^char.charCodeAt(0),16777619)>>>0;}
+  const hue=hash%360;
+  return `hsl(${hue},62%,67%)`;
+}
+function getPalette(category,meta=null){
+  const defined=state.palette.get(category);
+  // Добавленные партии не имеют политической классификации в основном справочнике.
+  // Временный технический цвет не заменяет категорийную палитру Google Sheets.
+  if(meta&&norm(meta.role)==="дополнительная партия"&&(!category||norm(category)==="не классифицированы")){
+    const color=colorForAdditionalParty(meta.country,meta.key);
+    return {color,outline:color,width:1.7};
+  }
+  return defined||{color:"#858B95",outline:"#858B95",width:2.3};
+}
 function dashFor(value){const t=norm(value);if(t.includes("точеч")||t.includes("dot"))return "dot";if(t.includes("пунктир")||t.includes("dash"))return "dash";return "solid";}
 function markerFor(value){const t=norm(value);if(t.includes("квадрат")||t.includes("square"))return "square";if(t.includes("ромб")||t.includes("diamond"))return "diamond";if(t.includes("треуголь")||t.includes("triangle"))return "triangle-up";return "circle";}
 function countryMeta(name){return COUNTRIES.find(c=>c.key===name)||{key:name,code:""};}
@@ -797,15 +853,21 @@ function addPoint(map,country,name,point,fallbackRole,source){
 }
 function buildSeries(country){
   const rows=state.rows.filter(r=>r.country===country);
+  const allRows=state.allRows.filter(r=>r.country===country);
   const allMap=new Map(),gapMap=new Map(),pairMap=new Map();
+
+  // Режим «Рейтинг»: все партии страны из исторической базы.
+  for(const row of allRows){
+    addPoint(allMap,country,row.party,{date:row.date,value:row.rating},"Дополнительная партия","party");
+  }
+
+  // Режим «Отрыв»: только партии мониторинга и их сопоставленные конкуренты.
   for(const row of rows){
     const partyMeta=getMeta(country,row.party,"Дополнительная партия");
-    addPoint(allMap,country,row.party,{date:row.date,value:row.rating},"Дополнительная партия","party");
     if(row.competitor&&row.competitorRating!==null){
-      addPoint(allMap,country,row.competitor,{date:row.date,value:row.competitorRating},"Конкурент","competitor");
+      addPoint(pairMap,country,row.party,{date:row.date,value:row.rating,competitor:row.competitor,competitorRating:row.competitorRating,gap:row.rating-row.competitorRating},"Партия мониторинга","party");
+      addPoint(pairMap,country,row.competitor,{date:row.date,value:row.competitorRating},"Конкурент","competitor");
       if(isMonitor(partyMeta)){
-        addPoint(pairMap,country,row.party,{date:row.date,value:row.rating,competitor:row.competitor,competitorRating:row.competitorRating,gap:row.rating-row.competitorRating},"Партия мониторинга","party");
-        addPoint(pairMap,country,row.competitor,{date:row.date,value:row.competitorRating},"Конкурент","competitor");
         const key=norm(partyMeta.key||row.party);
         if(!gapMap.has(key)) gapMap.set(key,{meta:partyMeta,points:new Map()});
         const group=gapMap.get(key);
@@ -818,14 +880,15 @@ function buildSeries(country){
     }
   }
   const convert=map=>[...map.values()].map(g=>({...g,points:[...g.points.values()].sort((a,b)=>a.date-b.date)}));
-  return {all:convert(allMap),pairs:convert(pairMap),gaps:convert(gapMap),rows};
+  return {all:convert(allMap),pairs:convert(pairMap),gaps:convert(gapMap),rows,allRows};
 }
+
 function formatTooltipValue(point,mode){
   if(mode==="gap") return formatGap(point.value);
   return formatPct(point.value);
 }
 function buildLegendItem(series,mode){
-  const meta=series.meta,palette=getPalette(meta.category),monitor=isMonitor(meta)||mode==="gap";
+  const meta=series.meta,palette=getPalette(meta.category,meta),monitor=isMonitor(meta)||mode==="gap";
   const color=palette.color;
   const dash=dashFor(meta.lineStyle);
   const borderStyle=dash==="dash"?"dashed":dash==="dot"?"dotted":"solid";
@@ -839,7 +902,7 @@ function renderLegend(series){
   const others=source.filter(s=>!isMonitor(s.meta));
   let html="";
   if(monitor.length) html+=`<div class="legend-section"><div class="legend-section-title">Партии мониторинга</div><div class="legend-items">${monitor.map(s=>buildLegendItem(s,state.chartMode)).join("")}</div></div>`;
-  if(others.length) html+=`<div class="legend-section"><div class="legend-section-title">${state.chartMode==="gap"?"Их крупнейшие конкуренты":"Конкуренты и другие партии"}</div><div class="legend-items">${others.map(s=>buildLegendItem(s,state.chartMode)).join("")}</div></div>`;
+  if(others.length) html+=`<div class="legend-section"><div class="legend-section-title">${state.chartMode==="gap"?"Крупнейшие конкуренты":"Остальные партии страны"}</div><div class="legend-items">${others.map(s=>buildLegendItem(s,state.chartMode)).join("")}</div></div>`;
   $("legend").innerHTML=html||"";
 }
 function setEmpty(message,isError=false){
@@ -851,14 +914,17 @@ function latestPointAt(series,date){
   return series.points.find(p=>dateKey(p.date)===key)||null;
 }
 function renderMetrics(series){
-  const latestDate=series.rows.reduce((max,r)=>!max||r.date>max?r.date:max,null);
-  const standings=series.all.map(item=>({meta:item.meta,point:latestPointAt(item,latestDate)})).filter(x=>x.point);
+  const metricRows=state.chartMode==="gap"?series.rows:series.allRows;
+  const latestDate=metricRows.reduce((max,r)=>!max||r.date>max?r.date:max,null);
+  const standingsSource=state.chartMode==="gap"?series.pairs:series.all;
+  const standings=standingsSource.map(item=>({meta:item.meta,point:latestPointAt(item,latestDate)})).filter(x=>x.point);
   standings.sort((a,b)=>b.point.value-a.point.value);
   const leader=standings[0];
   $("leaderValue").textContent=leader?formatPct(leader.point.value):"—";
-  $("leaderNote").textContent=leader?(leader.meta.label||leader.meta.key):"Нет доступных рейтингов на последнюю дату";
+  $("leaderNote").textContent=leader?(leader.meta.label||leader.meta.key):(state.chartMode==="rating"?"Нет доступных рейтингов на последнюю дату":"Нет данных по партиям мониторинга и конкурентам");
 
-  const gaps=series.gaps.map(item=>({meta:item.meta,point:latestPointAt(item,latestDate)})).filter(x=>x.point);
+  const latestGapDate=series.rows.reduce((max,r)=>!max||r.date>max?r.date:max,null);
+  const gaps=series.gaps.map(item=>({meta:item.meta,point:latestPointAt(item,latestGapDate)})).filter(x=>x.point);
   const gapValue=$("gapValue");
   gapValue.classList.toggle("multiple",gaps.length>1);
   if(gaps.length===1){
@@ -876,10 +942,10 @@ function renderMetrics(series){
   $("dateNote").textContent=latestDate?formatDate(latestDate,true):"Дата последних доступных данных";
 }
 function makeTrace(series,mode,outlineLayer=false){
-  const meta=series.meta,palette=getPalette(meta.category);
+  const meta=series.meta,palette=getPalette(meta.category,meta);
   const isMon=isMonitor(meta);
   const color=palette.color||"#858B95";
-  const width=Math.max(palette.width||2.3,isMon?3.5:2.1);
+  const width=isMon?Math.max(palette.width||2.3,3.5):(mode==="rating"?1.55:2.1);
   const dash=dashFor(meta.lineStyle),marker=markerFor(meta.marker);
   const x=series.points.map(p=>p.date),y=series.points.map(p=>p.value);
   if(outlineLayer){
@@ -891,16 +957,69 @@ function makeTrace(series,mode,outlineLayer=false){
     hoverinfo:"none",customdata,
     meta:{shortName:shortName(meta),russianName:meta.russian||"",fullName:meta.label||meta.key,category:meta.category,role:meta.role,isOutline:false,mode},
     line:{color,width,dash,shape:"linear"},
-    marker:{color,symbol:marker,size:isMon?7:6,line:{color:palette.outline||color,width:1}},
+    marker:{color,symbol:marker,size:isMon?7:(mode==="rating"?4:6),line:{color:palette.outline||color,width:1}},
     connectgaps:false
   };
 }
-function getYRange(series){
-  // Базовая шкала — 0–50%. Если значение выше 50%, шкала расширяется шагом 10 п. п.
-  const values=series.flatMap(item=>item.points.map(point=>Number(point.value))).filter(Number.isFinite);
-  const maxValue=values.length?Math.max(0,...values):0;
-  const upperBound=maxValue>50?Math.ceil(maxValue/10)*10:50;
-  return [0,upperBound];
+const RU_MONTHS=["янв.","февр.","мар.","апр.","мая","июн.","июл.","авг.","сент.","окт.","нояб.","дек."];
+
+function getTimeWindow(series,preset=state.timeRange){
+  const dates=series.flatMap(item=>item.points.map(p=>p.date)).filter(d=>d instanceof Date&&!Number.isNaN(d.getTime()));
+  const max=dates.length?new Date(Math.max(...dates.map(d=>d.getTime()))):new Date();
+  const min=dates.length?new Date(Math.min(...dates.map(d=>d.getTime()))):MIN_MONITORING_DATE;
+  const end=new Date(max.getFullYear(),max.getMonth(),max.getDate()+4);
+  let start;
+  if(preset==="all") start=min;
+  else {
+    const months=preset==="1y"?12:preset==="2y"?24:6;
+    start=new Date(max.getFullYear(),max.getMonth()-months,max.getDate());
+    if(start<min)start=min;
+  }
+  return [start,end];
+}
+function russianDateTicks(first,last){
+  const from=parseDate(first),to=parseDate(last);
+  if(!Number.isFinite(from.getTime())||!Number.isFinite(to.getTime())||from>=to)return {tickvals:[],ticktext:[]};
+  const months=Math.max(1,(to.getFullYear()-from.getFullYear())*12+to.getMonth()-from.getMonth());
+  const step=months<=10?1:months<=21?2:months<=40?3:months<=80?6:12;
+  const tickvals=[],ticktext=[];
+  let cursor=new Date(from.getFullYear(),from.getMonth(),1);
+  if(cursor<from)cursor=new Date(cursor.getFullYear(),cursor.getMonth()+1,1);
+  while(cursor<=to&&tickvals.length<200){
+    const y=cursor.getFullYear(),m=cursor.getMonth();
+    if(m%step===0){
+      tickvals.push(dateKey(cursor));
+      ticktext.push(`${RU_MONTHS[m]}${(m===0||step===12)?" "+y:""}`);
+    }
+    cursor=new Date(cursor.getFullYear(),cursor.getMonth()+1,1);
+  }
+  return {tickvals,ticktext};
+}
+function getYRange(series,window){
+  const lo=+parseDate(window[0]),hi=+parseDate(window[1]);
+  const values=series.flatMap(item=>item.points.filter(p=>+p.date>=lo&&+p.date<=hi).map(p=>Number(p.value))).filter(Number.isFinite);
+  const maxValue=values.length?Math.max(...values):0;
+  return [0,maxValue>50?Math.ceil(maxValue/10)*10:50];
+}
+function updateTimeButtons(){
+  document.querySelectorAll(".time-btn").forEach(button=>{
+    const active=button.dataset.time===state.timeRange;
+    button.classList.toggle("active",active);
+    button.setAttribute("aria-pressed",String(active));
+  });
+}
+function bindManualTimeZoom(gd,chosen){
+  if(gd.__barometerTimeZoomBound)return;
+  gd.__barometerTimeZoomBound=true;
+  gd.on("plotly_relayout",details=>{
+    const keys=Object.keys(details||{});
+    if(!keys.some(k=>k.startsWith("xaxis.range[")||k==="xaxis.range"||k==="xaxis.autorange"))return;
+    const range=gd.layout?.xaxis?.range||gd._fullLayout?.xaxis?.range;
+    if(!Array.isArray(range)||range.length!==2)return;
+    const ticks=russianDateTicks(range[0],range[1]);
+    const newY=getYRange(gd.__barometerSelectedSeries||chosen,range);
+    Plotly.relayout(gd,{"xaxis.tickvals":ticks.tickvals,"xaxis.ticktext":ticks.ticktext,"yaxis.range":newY});
+  });
 }
 function attachCrosshair(gd){
   if(gd.__barometerCrosshairBound) return;
@@ -958,19 +1077,22 @@ function renderChart(series){
   if(!chosen.length){setEmpty(state.chartMode==="gap"?"Для этой страны пока нет парных данных по партиям мониторинга и их конкурентам.":"Для этой страны нет доступных рейтингов.");return;}
   const outlineTraces=[],mainTraces=[];
   for(const item of chosen){
-    const palette=getPalette(item.meta.category);
+    const palette=getPalette(item.meta.category,item.meta);
     if(palette.outline&&palette.color&&palette.outline.toLowerCase()!==palette.color.toLowerCase()) outlineTraces.push(makeTrace(item,state.chartMode,true));
     mainTraces.push(makeTrace(item,state.chartMode,false));
   }
   const traces=[...outlineTraces,...mainTraces];
   const mobile=state.effectiveMode==="mobile";
-  const yRange=getYRange(chosen,state.chartMode);
+  const timeWindow=getTimeWindow(chosen);
+  const yRange=getYRange(chosen,timeWindow);
+  const dateTicks=russianDateTicks(timeWindow[0],timeWindow[1]);
   const layout={
-    autosize:true,height:mobile?475:560,uirevision:`${state.selectedCountry}-${state.chartMode}`,
+    autosize:true,height:mobile?475:560,uirevision:`${state.selectedCountry}-${state.chartMode}-${state.timeRange}-${dateKey(timeWindow[1])}`,
     paper_bgcolor:"#151518",plot_bgcolor:"#151518",
     margin:{l:62,r:24,t:24,b:68},font:{family:"Inter, Arial, sans-serif",color:"#d8d8de",size:11},
     hovermode:"x",hoverlabel:{bgcolor:"#242429",bordercolor:"#50505a",font:{color:"#fff",size:10}},
-    xaxis:{type:"date",gridcolor:"#303037",linecolor:"#303037",tickfont:{color:"#a1a1aa",size:10},zeroline:false,showgrid:false,automargin:true,
+    xaxis:{type:"date",range:timeWindow.map(dateKey),tickmode:"array",tickvals:dateTicks.tickvals,ticktext:dateTicks.ticktext,
+      gridcolor:"#303037",linecolor:"#303037",tickfont:{color:"#a1a1aa",size:10},zeroline:false,showgrid:false,automargin:true,
       rangeslider:{visible:true,thickness:.115,bgcolor:"#0b0b0d",bordercolor:"#303037",borderwidth:1}},
     yaxis:{range:yRange,autorange:false,fixedrange:false,title:{text:"Рейтинг, %",font:{size:11,color:"#a1a1aa"}},ticksuffix:"%",gridcolor:"#303037",linecolor:"#303037",tickfont:{color:"#a1a1aa",size:10},zeroline:false,automargin:true},
     showlegend:false,dragmode:"pan"
@@ -978,13 +1100,16 @@ function renderChart(series){
   const config={responsive:true,displaylogo:false,scrollZoom:true,modeBarButtonsToRemove:["select2d","lasso2d","autoScale2d"]};
   Plotly.react("chart",traces,layout,config).then(()=>{
     const gd=$("chart");
+    gd.__barometerSelectedSeries=chosen;
     attachCrosshair(gd);
+    bindManualTimeZoom(gd,chosen);
     Plotly.Plots.resize(gd);
   });
   renderLegend(series);
+  updateTimeButtons();
   $("chartTitle").textContent=state.chartMode==="gap"?`Отрыв от крупнейшего конкурента · ${state.selectedCountry}`:`Электоральная поддержка · ${state.selectedCountry}`;
-  $("chartHint").textContent=state.chartMode==="gap"?"Оставлены только партии мониторинга и их крупнейшие конкуренты. Расстояние между линиями показывает отрыв.":"Белые линии — партии мониторинга; цветные — выбранные для сравнения конкуренты. Нижняя шкала управляет временным диапазоном.";
-  $("chartModeExplainer").textContent=state.chartMode==="gap"?"Пара линий: партия и её конкурент; отрыв — разница между рейтингами.":"Показаны рейтинги партий мониторинга и выбранных для сравнения конкурентов.";
+  $("chartHint").textContent=state.chartMode==="gap"?"Оставлены только партии мониторинга и их крупнейшие конкуренты. Расстояние между линиями показывает отрыв.":"Все партии выбранной страны. Период меняется кнопками и нижней временной шкалой.";
+  $("chartModeExplainer").textContent=state.chartMode==="gap"?"Пара линий: партия и её конкурент; отрыв — разница между рейтингами.":"Все партии выбранной страны; партии мониторинга выделены.";
   $("ratingMode").classList.toggle("active",state.chartMode==="rating");
   $("gapMode").classList.toggle("active",state.chartMode==="gap");
   $("ratingMode").setAttribute("aria-pressed",String(state.chartMode==="rating"));
@@ -1072,10 +1197,22 @@ function governmentSnapshot(day,allowFirst=false){
   return {result,assumptions};
 }
 function calculateBarometer(){
-  const dates=[...new Map(state.rows.map(r=>[dateKey(r.date),r.date])).values()].sort((a,b)=>a-b);
-  if(dates.length<2) throw new Error("Для динамики барометра нужны минимум два среза рейтингов.");
-  const today=dates[dates.length-1],previous=dates[dates.length-2];
-  const current=pollingSnapshot(today),old=pollingSnapshot(previous);
+  const dates=[...new Map(state.rows.filter(r=>r.date.getDate()===1).map(r=>[dateKey(r.date),r.date])).values()].sort((a,b)=>b-a);
+  const complete=[];
+  for(const day of dates){
+    try{
+      const snapshot=pollingSnapshot(day);
+      complete.push({day,snapshot});
+    }catch(error){
+      // Если по какому-либо месяцу не все страны/партии доступны, берём
+      // предыдущий целиком доступный срез на 1-е число, не полуторамесячный.
+      console.warn("Пропущен неполный месячный срез:",dateKey(day),error.message);
+    }
+    if(complete.length===2)break;
+  }
+  if(complete.length<2)throw new Error("Для динамики барометра нужны два полных месячных среза на 1-е число.");
+  const today=complete[0].day,previous=complete[1].day;
+  const current=complete[0].snapshot,old=complete[1].snapshot;
   const currentGov=governmentSnapshot(today,false);
   const oldGov=governmentSnapshot(previous,true);
   const mean=values=>values.reduce((a,b)=>a+b,0)/values.length;
@@ -1170,9 +1307,9 @@ async function loadAll(){
       fetchText(ALL_PARTIES_TSV_URL),fetchText(DIRECTORY_TSV_URL),fetchText(PALETTE_TSV_URL)
     ]);
     const directory=loadDirectory(parseTable(directoryText,"Справочник"));
-    const rows=transformData(parseTable(allPartiesText,"Интерактив — все партии"),directory);
+    const transformed=transformData(parseTable(allPartiesText,"Интерактив — все партии"),directory);
     const palette=loadPalette(parseTable(paletteText,"Палитра"));
-    state.rows=rows;state.directory=directory;state.palette=palette;
+    state.rows=transformed.pairedRows;state.allRows=transformed.allRows;state.directory=directory;state.palette=palette;
 
     let coalitionError=null;
     const coalitionPromise=fetchText(COALITIONS_URL).then(t=>loadCoalitions(parseTable(t,"Коалиции",true))).catch(e=>{coalitionError=e;return [];});
@@ -1180,8 +1317,8 @@ async function loadAll(){
     const [coalitions,portfolios]=await Promise.all([coalitionPromise,portfolioPromise]);
     state.coalitions=coalitions;state.portfolios=portfolios;
 
-    const firstAvailable=COUNTRIES.find(c=>rows.some(r=>r.country===c.key));
-    if(!state.selectedCountry||!rows.some(r=>r.country===state.selectedCountry)) state.selectedCountry=firstAvailable?.key||rows[0].country;
+    const firstAvailable=COUNTRIES.find(c=>state.allRows.some(r=>r.country===c.key));
+    if(!state.selectedCountry||!state.allRows.some(r=>r.country===state.selectedCountry)) state.selectedCountry=firstAvailable?.key||state.allRows[0].country;
     renderCountryButtons();
     if(!$('app').classList.contains('hidden')) renderCountry(state.selectedCountry);
 
@@ -1197,7 +1334,7 @@ async function loadAll(){
     if(state.dataWarnings.length) console.warn("Предупреждения в данных:",state.dataWarnings);
   }catch(error){
     console.error("Ошибка загрузки «Правого барометра»:",error);
-    if(!state.rows.length){setEmpty(`Не удалось загрузить данные. ${error.message||"Проверьте опубликованные вкладки Google Sheets."}`,true);}
+    if(!state.allRows.length){setEmpty(`Не удалось загрузить данные. ${error.message||"Проверьте опубликованные вкладки Google Sheets."}`,true);}
     else setBarometerError(error);
   }finally{
     state.loading=false;$("refresh").disabled=false;$("refresh").textContent="↻ Обновить";
@@ -1232,6 +1369,13 @@ $("switchMode").addEventListener("click",switchMode);
 $("refresh").addEventListener("click",loadAll);
 $("countrySearch").addEventListener("input",renderCountryButtons);
 $("ratingMode").addEventListener("click",()=>{if(state.chartMode!=="rating"){state.chartMode="rating";if(state.selectedCountry)renderCountry(state.selectedCountry);}});
+document.querySelectorAll(".time-btn").forEach(button=>{
+  button.addEventListener("click",()=>{
+    if(state.timeRange===button.dataset.time)return;
+    state.timeRange=button.dataset.time;
+    if(state.selectedCountry)renderCountry(state.selectedCountry);
+  });
+});
 $("gapMode").addEventListener("click",()=>{if(state.chartMode!=="gap"){state.chartMode="gap";if(state.selectedCountry)renderCountry(state.selectedCountry);}});
 $("goToRatings").addEventListener("click",()=>$("ratingsSection").scrollIntoView({behavior:"smooth",block:"start"}));
 
