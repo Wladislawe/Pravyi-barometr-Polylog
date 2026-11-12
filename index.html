@@ -122,7 +122,7 @@
     .barometer-error{color:#ff9b91!important}
 
     /* Раздел рейтингов */
-    .ratings-section{scroll-margin-top:92px}
+    .ratings-section{scroll-margin-top:calc(72px + 16px)}
     .heading-row{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;flex-wrap:wrap;margin:0 0 15px}
     h1{font-size:clamp(25px,3vw,36px);line-height:1.08;letter-spacing:-.04em;margin:0;font-weight:900}
     .subtitle{font-size:12px;color:#a0a0a9;margin-top:8px}
@@ -158,15 +158,18 @@
     #chart{height:560px;width:100%;min-width:0}
     .empty{min-height:390px;display:grid;place-items:center;text-align:center;padding:30px;color:#92929b;font-size:13px}
     .empty.error{color:#ff9b91}
-    .metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin:0 0 13px}
-    .metric{min-width:0;background:#17171b;border:1px solid #303037;border-radius:12px;padding:13px 15px}
+    .metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 13px}
+    .metric{min-width:0;background:#17171b;border:1px solid #303037;border-radius:12px;padding:13px 12px}
     .metric-label{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#96969f;font-weight:850}
-    .metric-value{font-size:clamp(20px,2.3vw,28px);font-weight:900;letter-spacing:-.035em;margin-top:7px;line-height:1.1;overflow-wrap:anywhere}
-    .metric-value.multiple{font-size:13px;letter-spacing:0;line-height:1.5}
-    .metric-note{font-size:10px;color:#898992;margin-top:6px;min-height:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .metric-value{font-size:clamp(19px,1.9vw,26px);font-weight:900;letter-spacing:-.035em;margin-top:7px;line-height:1.1;overflow-wrap:anywhere}
+    .metric-value.multiple{font-size:13px;letter-spacing:0;line-height:1.45}
+    .metric-note{font-size:10px;color:#898992;margin-top:6px;min-height:24px;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
     .gap-line{display:flex;justify-content:space-between;gap:12px;align-items:baseline}
     .gap-line span:first-child{color:#b8b8c0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .gap-line strong{white-space:nowrap}
+    .metric-value .monitor-line{display:flex;gap:7px;justify-content:space-between;align-items:baseline}
+    .monitor-line span{color:#b8b8c0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .monitor-line strong{white-space:nowrap;color:#fff}
     .footnote{font-size:10px;line-height:1.5;color:#777780;margin:12px 2px 0}
     .footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;border-top:1px solid #29292e;margin-top:22px;padding-top:13px;color:#777780;font-size:10px}
 
@@ -207,11 +210,10 @@
     .mode-mobile .legend-name{font-size:9px}
     .mode-mobile .legend-category{font-size:8px}
     .mode-mobile #chart{height:475px}
-    .mode-mobile .metrics{grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
-    .mode-mobile .metric{padding:11px}
-    .mode-mobile .metric:last-child{grid-column:1/-1}
-    .mode-mobile .metric-label{font-size:8px}
-    .mode-mobile .metric-value{font-size:21px}
+    .mode-mobile .metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:10px;overflow:visible}
+    .mode-mobile .metric{padding:11px 10px;min-height:120px}
+    .mode-mobile .metric-label{font-size:9px;line-height:1.3;min-height:36px;overflow-wrap:anywhere}
+    .mode-mobile .metric-value{font-size:20px}
     .mode-mobile .metric-value.multiple{font-size:11px}
     .mode-mobile .metric-note{font-size:9px}
     .mode-mobile .footnote,.mode-mobile .footer{font-size:9px}
@@ -244,8 +246,12 @@
       .time-switch{width:100%;justify-content:space-between}
       .time-btn{flex:1;padding:8px 6px;font-size:10px}
       #chart{height:470px}
-      .metrics{grid-template-columns:1fr 1fr;gap:8px}
-      .metric:last-child{grid-column:1/-1}
+      .metric{padding:11px 10px;min-height:120px}
+      .metric-label{font-size:9px;line-height:1.3;min-height:36px;overflow-wrap:anywhere}
+      .metric-value{font-size:20px}
+      .metric-value.multiple{font-size:11px}
+      .metric-note{font-size:9px}
+      .metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;overflow:visible}
     }
     @media(max-width:420px){
       .barometer-title{font-size:22px}
@@ -372,16 +378,21 @@
             <div id="countryListMobile" class="mobile-country-list"></div>
           </div>
 
-          <section class="metrics">
+          <section class="metrics" aria-label="Показатели партий выбранной страны">
             <div class="metric">
-              <div class="metric-label">Лидер по поддержке</div>
-              <div id="leaderValue" class="metric-value">—</div>
-              <div id="leaderNote" class="metric-note">Среди партий, отображаемых на графике</div>
+              <div class="metric-label">Поддержка внесистемных правых</div>
+              <div id="monitorValue" class="metric-value">—</div>
+              <div id="monitorNote" class="metric-note">Рейтинг партий мониторинга</div>
             </div>
             <div class="metric">
-              <div class="metric-label">Текущий отрыв</div>
+              <div class="metric-label">Лидер среди остальных партий</div>
+              <div id="leaderValue" class="metric-value">—</div>
+              <div id="leaderNote" class="metric-note">Наиболее популярная партия вне мониторинга</div>
+            </div>
+            <div class="metric">
+              <div class="metric-label">Текущий отрыв внесистемных правых</div>
               <div id="gapValue" class="metric-value">—</div>
-              <div id="gapNote" class="metric-note">Рейтинг партии минус рейтинг конкурента</div>
+              <div id="gapNote" class="metric-note">Отрыв от закреплённого конкурента</div>
             </div>
             <div class="metric">
               <div class="metric-label">Последний замер</div>
@@ -1002,17 +1013,40 @@ function latestPointAt(series,date){
   return series.points.find(p=>dateKey(p.date)===key)||null;
 }
 function renderMetrics(series){
-  const metricRows=state.chartMode==="gap"?series.rows:series.allRows;
-  const latestDate=metricRows.reduce((max,r)=>!max||r.date>max?r.date:max,null);
-  const standingsSource=state.chartMode==="gap"?series.pairs:series.all;
-  const standings=standingsSource.map(item=>({meta:item.meta,point:latestPointAt(item,latestDate)})).filter(x=>x.point);
-  standings.sort((a,b)=>b.point.value-a.point.value);
-  const leader=standings[0];
+  // Все 4 карточки привязаны к последнему срезу страны, независимо от режима графика.
+  // Для стран с двумя правыми партиями показываем обе отдельно, не суммируем рейтинги.
+  const latestDate=series.allRows.reduce((max,r)=>!max||r.date>max?r.date:max,null);
+  const standings=latestDate?series.all.map(item=>({meta:item.meta,point:latestPointAt(item,latestDate)}))
+    .filter(item=>item.point&&Number.isFinite(item.point.value))
+    .sort((a,b)=>b.point.value-a.point.value):[];
+  const monitorValues=standings.filter(item=>isMonitor(item.meta));
+  const others=standings.filter(item=>!isMonitor(item.meta));
+  const monitorValue=$("monitorValue");
+  monitorValue.classList.toggle("multiple",monitorValues.length>1);
+  if(monitorValues.length===1){
+    monitorValue.textContent=formatPct(monitorValues[0].point.value);
+    $("monitorNote").textContent=monitorValues[0].meta.label||monitorValues[0].meta.key;
+  }else if(monitorValues.length>1){
+    monitorValue.innerHTML=monitorValues.map(item=>`<div class="monitor-line"><span>${escapeHtml(item.meta.key)}</span><strong>${escapeHtml(formatPct(item.point.value))}</strong></div>`).join("");
+    $("monitorNote").textContent="Поддержка каждой партии отдельно";
+  }else{
+    monitorValue.textContent="—";
+    $("monitorNote").textContent="Нет данных мониторинга на последний срез";
+  }
+
+  // Не дублируем правых в карточке лидера: если они первые, показываем
+  // наиболее популярную другую партию (обычно второе место).
+  const leader=others[0];
   $("leaderValue").textContent=leader?formatPct(leader.point.value):"—";
-  $("leaderNote").textContent=leader?(leader.meta.label||leader.meta.key):(state.chartMode==="rating"?"Нет доступных рейтингов на последнюю дату":"Нет данных по партиям мониторинга и конкурентам");
+  if(leader){
+    const rank=standings.indexOf(leader)+1;
+    $("leaderNote").textContent=`${leader.meta.label||leader.meta.key} · № ${rank} в стране`;
+  }else{
+    $("leaderNote").textContent="Нет данных по другим партиям";
+  }
 
   const latestGapDate=series.rows.reduce((max,r)=>!max||r.date>max?r.date:max,null);
-  const gaps=series.gaps.map(item=>({meta:item.meta,point:latestPointAt(item,latestGapDate)})).filter(x=>x.point);
+  const gaps=series.gaps.map(item=>({meta:item.meta,point:latestGapDate?latestPointAt(item,latestGapDate):null})).filter(x=>x.point);
   const gapValue=$("gapValue");
   gapValue.classList.toggle("multiple",gaps.length>1);
   if(gaps.length===1){
@@ -1022,13 +1056,14 @@ function renderMetrics(series){
   }else if(gaps.length>1){
     gapValue.innerHTML=gaps.map(item=>`<div class="gap-line"><span>${escapeHtml(item.meta.key)}</span><strong style="color:${item.point.value<0?"#ff7777":item.point.value>0?"#62d6ad":"#fff"}">${escapeHtml(formatGap(item.point.value))}</strong></div>`).join("");
     gapValue.style.color="#fff";
-    $("gapNote").textContent="Отрыв каждой партии от указанного конкурента";
+    $("gapNote").textContent="Отрыв каждой партии от конкурента";
   }else{
     gapValue.textContent="—";gapValue.style.color="#fff";$("gapNote").textContent="Нет данных для расчёта отрыва";
   }
   $("dateValue").textContent=latestDate?formatDate(latestDate,false):"—";
   $("dateNote").textContent=latestDate?formatDate(latestDate,true):"Дата последних доступных данных";
 }
+
 function makeTrace(series,mode,outlineLayer=false){
   const meta=series.meta,palette=getPalette(meta.category,meta);
   const isMon=isMonitor(meta);
@@ -1145,7 +1180,7 @@ function attachCrosshair(gd){
         text:`<b>${escapeHtml(label)} ${escapeHtml(value)}</b><br><span style="font-size:9px;color:#aaaab2">${escapeHtml(category)}</span>`,showarrow:false,align:"left",
         font:{family:"Inter, Arial, sans-serif",size:10,color},bgcolor:"rgba(11,11,13,.90)",bordercolor:"rgba(80,80,90,.55)",borderwidth:.5,borderpad:2};
     });
-    annotations.push({xref:"x",yref:"paper",x:hoverX,y:1.035,xanchor:nearRight?"right":"left",yanchor:"bottom",xshift:nearRight?-7:7,text:formatDate(new Date(hoverX),true),showarrow:false,font:{size:9,color:"#d4d4d8"},bgcolor:"rgba(21,21,24,.92)",bordercolor:"#45454e",borderwidth:.5,borderpad:3});
+    annotations.push({xref:"x",yref:"paper",x:hoverX,y:0.90,xanchor:nearRight?"right":"left",yanchor:"top",xshift:nearRight?-7:7,text:formatDate(new Date(hoverX),true),showarrow:false,font:{size:9,color:"#d4d4d8"},bgcolor:"rgba(21,21,24,.92)",bordercolor:"#45454e",borderwidth:.5,borderpad:3});
     const shapes=[{type:"line",xref:"x",yref:"paper",x0:hoverX,x1:hoverX,y0:0,y1:1,line:{color:"rgba(235,235,240,.65)",width:1,dash:"dot"}}];
     Plotly.relayout(gd,{shapes,annotations});
   });
@@ -1194,13 +1229,18 @@ function renderChart(series){
   $("ratingMode").setAttribute("aria-pressed",String(state.chartMode==="rating"));
   $("gapMode").setAttribute("aria-pressed",String(state.chartMode==="gap"));
 }
-function scrollToCountryChart(){
-  // Переход только по клику на страну, не при стартовой загрузке и автообновлении.
-  $("chartPanel").scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"start"});
+function scrollToRatingsHeading(){
+  // Выводим «Динамика партий» непосредственно под фиксированной шапкой проекта.
+  // Замеряем реальную высоту шапки: она различается на мобильном и десктопе.
+  const target=$("ratingsSection"),topbar=document.querySelector(".topbar");
+  if(!target)return;
+  const topbarHeight=topbar?topbar.getBoundingClientRect().height:72;
+  const top=window.scrollY+target.getBoundingClientRect().top-topbarHeight-14;
+  window.scrollTo({top:Math.max(0,top),behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
 }
 function selectCountryAndScroll(country){
   renderCountry(country);
-  scrollToCountryChart();
+  scrollToRatingsHeading();
 }
 function renderCountry(country){
   if(!country)return;
@@ -1543,7 +1583,7 @@ document.querySelectorAll(".time-btn").forEach(button=>{
   });
 });
 $("gapMode").addEventListener("click",()=>{if(state.chartMode!=="gap"){state.chartMode="gap";if(state.selectedCountry)renderCountry(state.selectedCountry);}});
-$("goToRatings").addEventListener("click",()=>$("ratingsSection").scrollIntoView({behavior:"smooth",block:"start"}));
+$("goToRatings").addEventListener("click",scrollToRatingsHeading);
 
 try{
   const savedMode=localStorage.getItem(MODE_KEY);
