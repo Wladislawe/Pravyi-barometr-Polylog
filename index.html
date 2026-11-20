@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- RELEASE 2026-11-12-V3: GAUGE_ZONE_EXPLANATIONS / RIGHT_TURN_60 / CHART_AUTOSCALE / LEGEND_BELOW -->
+<!-- RELEASE 2026-11-20-V2: POLITICO_EVENTS / EDITORIAL_EVENTS / EXCLUDED_EVENT_DATE / GAUGE_ZONE_COLORS -->
 <html lang="ru">
 <head>
   <meta charset="utf-8">
@@ -156,6 +156,19 @@
     .legend-name{font-size:10px;color:#f0f0f2;font-weight:750;line-height:1.25;overflow-wrap:anywhere}
     .legend-category{font-size:9px;color:#85858e;line-height:1.25;margin-top:2px}
     #chart{height:560px;width:100%;min-width:0}
+    .events-panel{padding:10px 18px;border-top:1px solid #303037;background:#121215;color:#b9c3ca;font-size:11px}
+    .events-panel[hidden]{display:none}
+    .events-panel summary{cursor:pointer;font-weight:750;list-style-position:inside;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .events-panel summary::before{content:"";display:inline-block;height:15px;border-left:2px dotted #92d9e8;margin:0 3px}
+    .events-panel summary::after{content:"▾";color:#92d9e8;margin-left:auto}
+    .events-panel[open] summary::after{content:"▴"}
+    .events-list{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:7px;max-height:230px;overflow:auto}
+    .events-list li{display:grid;grid-template-columns:24px 90px minmax(0,1fr);gap:8px;align-items:baseline;line-height:1.4}
+    .event-number{color:#92d9e8;font-weight:850;text-align:center}
+    .event-date{color:#9ca9b3;font-variant-numeric:tabular-nums}
+    .event-names{color:#e0e3e8;overflow-wrap:anywhere}
+    .events-note{margin-top:8px;color:#81818c;font-size:10px}
+    @media(max-width:700px){.events-panel{padding:10px 12px}.events-list li{grid-template-columns:20px 76px minmax(0,1fr);gap:5px;font-size:10px}}
     .empty{min-height:390px;display:grid;place-items:center;text-align:center;padding:30px;color:#92929b;font-size:13px}
     .empty.error{color:#ff9b91}
     .metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 13px}
@@ -405,7 +418,7 @@
             <div class="chart-head">
               <div>
                 <div id="chartTitle" class="chart-title">Электоральная поддержка</div>
-                <div id="chartHint" class="chart-hint">Наведение показывает значения и политическую категорию партий. Период выбирается кнопками.</div>
+                <div id="chartHint" class="chart-hint">Наведение показывает значения и политическую категорию партий.</div>
               </div>
               <div class="chart-controls">
                 <div class="chart-mode-switch" role="group" aria-label="Тип графика">
@@ -422,6 +435,11 @@
               </div>
             </div>
             <div id="chart"><div class="empty">График появится после загрузки данных.</div></div>
+            <details id="eventsPanel" class="events-panel" hidden>
+              <summary><span id="eventsSummary">Политические события</span></summary>
+              <ol id="eventsList" class="events-list"></ol>
+              <div class="events-note">Источники событий: POLITICO и редакционные дополнения.</div>
+            </details>
             <div id="legend" class="legend-wrap"></div>
           </section>
 
@@ -454,6 +472,10 @@ const BAROMETER_DATA_URL = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEE
 // Новая заполняемая пользователем вкладка: единый идеологический справочник всех кодов POLITICO.
 // Google Visualization обращается к ней по имени — новый gid подставлять не нужно.
 const ALL_CLASSIFICATION_URL = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent("Классификация_все_партии")}`;
+// Политические события из отдельной автоматически обновляемой вкладки.
+const EVENTS_URL = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent("События_POLITICO")}`;
+const EVENT_COLOR = "#92d9e8";
+const EXCLUDED_EVENT_DATES = new Set(["2022-02-24"]);
 const COALITIONS_URL = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent("Коалиции")}`;
 const PORTFOLIOS_URL = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent("Портфели")}`;
 const REFRESH_EVERY_MINUTES = 10;
@@ -501,7 +523,7 @@ const FLAG_SVGS = {
 };
 
 const state = {
-  rows:[], allRows:[], indexRows:[], directory:[], extraDirectory:new Map(), palette:new Map(), coalitions:[], portfolios:[],
+  rows:[], allRows:[], indexRows:[], directory:[], extraDirectory:new Map(), palette:new Map(), coalitions:[], portfolios:[], events:[],
   selectedCountry:"", chartMode:"rating", timeRange:"6m", modePreference:"auto", effectiveMode:"desktop",
   lastSuccessfulLoad:null, loading:false, barometer:null, dataWarnings:[]
 };
@@ -889,6 +911,25 @@ function loadPalette(data){
   if(!palette.size) throw new Error("В «Палитре» не найдены категории с цветами.");
   return palette;
 }
+function loadPoliticalEvents(data){
+  if(!data.length)return [];
+  const headers=Object.keys(data[0]).filter(h=>!h.startsWith("__"));
+  const dateCol=findHeader(headers,["Дата"]),countryCol=findHeader(headers,["Страна"]);
+  const nameCol=findHeader(headers,["Событие"]),ruCol=findHeader(headers,["Событие_рус"]);
+  if(!dateCol||!countryCol||!nameCol)throw new Error("«События_POLITICO»: нужны Дата, Страна, Событие.");
+  const seen=new Set(),events=[];
+  for(const row of data){
+    const date=parseDate(row[dateCol],row.__slashIsUS),country=normalizeCountry(row[countryCol]);
+    const original=clean(row[nameCol]);
+    const label=(ruCol?clean(row[ruCol]):"")||original;
+    if(!date||date<MIN_MONITORING_DATE||EXCLUDED_EVENT_DATES.has(dateKey(date))||!original||!COUNTRIES.some(c=>c.key===country))continue;
+    const id=JSON.stringify([country,dateKey(date),norm(original)]);
+    if(seen.has(id))continue;
+    seen.add(id);events.push({date,country,label,original});
+  }
+  return events.sort((a,b)=>a.date-b.date||a.label.localeCompare(b.label,"ru"));
+}
+
 function loadCoalitions(data){
   if(!data.length) throw new Error("Вкладка «Коалиции» пуста.");
   const headers=Object.keys(data[0]).filter(h=>!h.startsWith("__"));
@@ -1005,6 +1046,7 @@ function renderLegend(series){
   $("legend").innerHTML=html||"";
 }
 function setEmpty(message,isError=false){
+  $("eventsPanel").hidden=true;
   $("chart").innerHTML=`<div class="empty${isError?" error":""}">${escapeHtml(message)}</div>`;
   $("legend").innerHTML="";
 }
@@ -1135,6 +1177,41 @@ function updateTimeButtons(){
     button.setAttribute("aria-pressed",String(active));
   });
 }
+// Одна постоянная вертикальная линия на дату; несколько событий в один день объединяются.
+// В отличие от временного crosshair эти метки не удаляются при наведении и уходе курсора.
+function getEventOverlay(country,timeWindow){
+  const lo=+timeWindow[0],hi=+timeWindow[1],groups=new Map();
+  for(const event of state.events){
+    if(event.country!==country||+event.date<lo||+event.date>hi)continue;
+    const key=dateKey(event.date);
+    if(!groups.has(key))groups.set(key,{date:event.date,events:[]});
+    groups.get(key).events.push(event);
+  }
+  const days=[...groups.values()].sort((a,b)=>a.date-b.date);
+  const shapes=[],annotations=[];
+  const laneLast=[-Infinity,-Infinity,-Infinity];
+  const minSpacing=(hi-lo)*.045;
+  days.forEach((day,i)=>{
+    const x=dateKey(day.date),text=day.events.map(e=>escapeHtml(e.label)).join("<br>");
+    shapes.push({type:"line",xref:"x",yref:"paper",x0:x,x1:x,y0:0,y1:1,layer:"below",line:{color:EVENT_COLOR,width:1.5,dash:"dot"},opacity:.8});
+    let lane=laneLast.findIndex(last=>+day.date-last>=minSpacing);
+    if(lane<0)lane=laneLast.indexOf(Math.min(...laneLast));
+    laneLast[lane]=+day.date;
+    annotations.push({xref:"x",yref:"paper",x,y:1,xanchor:"center",yanchor:"bottom",yshift:5+lane*15,showarrow:false,
+      text:`<b>${i+1}</b>`,hovertext:`<b>${escapeHtml(formatDate(day.date,true))}</b><br>${text}`,captureevents:true,
+      font:{size:9,color:EVENT_COLOR},bgcolor:"#1b292f",bordercolor:EVENT_COLOR,borderwidth:.6,borderpad:2,
+      hoverlabel:{bgcolor:"#1b292f",bordercolor:EVENT_COLOR,font:{color:"#f4f4f5",size:11}}});
+  });
+  return {days,shapes,annotations};
+}
+function renderEventList(overlay){
+  const panel=$("eventsPanel"),list=$("eventsList");
+  panel.hidden=!overlay.days.length;
+  if(!overlay.days.length){list.innerHTML="";return;}
+  const total=overlay.days.reduce((sum,day)=>sum+day.events.length,0);
+  $("eventsSummary").textContent=`Политические события · ${total}`;
+  list.innerHTML=overlay.days.map((day,i)=>`<li><span class="event-number">${i+1}</span><span class="event-date">${escapeHtml(formatDate(day.date,true))}</span><span class="event-names">${day.events.map(e=>escapeHtml(e.label)).join(" · ")}</span></li>`).join("");
+}
 function attachCrosshair(gd){
   if(gd.__barometerCrosshairBound) return;
   gd.__barometerCrosshairBound=true;
@@ -1182,9 +1259,13 @@ function attachCrosshair(gd){
     });
     annotations.push({xref:"x",yref:"paper",x:hoverX,y:0.90,xanchor:nearRight?"right":"left",yanchor:"top",xshift:nearRight?-7:7,text:formatDate(new Date(hoverX),true),showarrow:false,font:{size:9,color:"#d4d4d8"},bgcolor:"rgba(21,21,24,.92)",bordercolor:"#45454e",borderwidth:.5,borderpad:3});
     const shapes=[{type:"line",xref:"x",yref:"paper",x0:hoverX,x1:hoverX,y0:0,y1:1,line:{color:"rgba(235,235,240,.65)",width:1,dash:"dot"}}];
-    Plotly.relayout(gd,{shapes,annotations});
+    const base=gd.__politicalEvents||{shapes:[],annotations:[]};
+    Plotly.relayout(gd,{shapes:[...base.shapes,...shapes],annotations:[...base.annotations,...annotations]});
   });
-  gd.on("plotly_unhover",()=>Plotly.relayout(gd,{shapes:[],annotations:[]}));
+  gd.on("plotly_unhover",()=>{
+    const base=gd.__politicalEvents||{shapes:[],annotations:[]};
+    Plotly.relayout(gd,{shapes:base.shapes,annotations:base.annotations});
+  });
 }
 function renderChart(series){
   if(!window.Plotly){setEmpty("Не удалось загрузить библиотеку графиков. Обновите страницу.",true);return;}
@@ -1201,10 +1282,13 @@ function renderChart(series){
   const timeWindow=getTimeWindow(chosen);
   const yRange=getYRange(chosen,timeWindow);
   const dateTicks=russianDateTicks(timeWindow[0],timeWindow[1]);
+  const eventOverlay=getEventOverlay(state.selectedCountry,timeWindow);
+  $("chart").__politicalEvents=eventOverlay;
   const layout={
+    shapes:eventOverlay.shapes,annotations:eventOverlay.annotations,
     autosize:true,height:mobile?475:560,uirevision:`${state.selectedCountry}-${state.chartMode}-${state.timeRange}-${dateKey(timeWindow[1])}`,
     paper_bgcolor:"#151518",plot_bgcolor:"#151518",
-    margin:{l:62,r:24,t:24,b:68},font:{family:"Inter, Arial, sans-serif",color:"#d8d8de",size:11},
+    margin:{l:62,r:24,t:eventOverlay.days.length?64:24,b:68},font:{family:"Inter, Arial, sans-serif",color:"#d8d8de",size:11},
     hovermode:"x",hoverlabel:{bgcolor:"#242429",bordercolor:"#50505a",font:{color:"#fff",size:10}},
     xaxis:{type:"date",range:timeWindow.map(dateKey),tickmode:"array",tickvals:dateTicks.tickvals,ticktext:dateTicks.ticktext,
       gridcolor:"#303037",linecolor:"#303037",tickfont:{color:"#a1a1aa",size:10},zeroline:false,showgrid:false,automargin:true,
@@ -1220,9 +1304,10 @@ function renderChart(series){
     Plotly.Plots.resize(gd);
   });
   renderLegend(series);
+  renderEventList(eventOverlay);
   updateTimeButtons();
   $("chartTitle").textContent=state.chartMode==="gap"?`Отрыв от крупнейшего конкурента · ${state.selectedCountry}`:`Электоральная поддержка · ${state.selectedCountry}`;
-  $("chartHint").textContent=state.chartMode==="gap"?"Оставлены только партии мониторинга и их крупнейшие конкуренты. Расстояние между линиями показывает отрыв.":"Все партии выбранной страны. Период меняется только кнопками сверху.";
+  $("chartHint").textContent=state.chartMode==="gap"?"Оставлены только партии мониторинга и их крупнейшие конкуренты. Расстояние между линиями показывает отрыв.":"Все партии выбранной страны.";
   $("chartModeExplainer").textContent=state.chartMode==="gap"?"Пара линий: партия и её конкурент; отрыв — разница между рейтингами.":"Все партии выбранной страны; партии мониторинга выделены.";
   $("ratingMode").classList.toggle("active",state.chartMode==="rating");
   $("gapMode").classList.toggle("active",state.chartMode==="gap");
@@ -1365,11 +1450,11 @@ function gaugeSectorPath(start,end,r=210){
 }
 // Пороговые зоны — пояснительная интерпретация авторского индекса, не часть его формулы.
 const GAUGE_ZONES=[
-  {a:0,b:20,title:"Минимальное влияние",description:"Правые партии слабо представлены в электоральной конкуренции и практически не влияют на состав правительств и государственную повестку.",color:"rgba(53,184,90,.20)"},
-  {a:20,b:40,title:"Ограниченное влияние",description:"Правые обладают заметной электоральной поддержкой в отдельных странах, но возможности воздействовать на решения правительства остаются ограниченными.",color:"rgba(215,200,90,.20)"},
-  {a:40,b:60,title:"Значимое политическое влияние",description:"Правые становятся существенным фактором партийной конкуренции и способны влиять на политическую повестку, хотя не определяют общий курс.",color:"rgba(223,150,62,.23)"},
-  {a:60,b:80,title:"Правый поворот",description:"Качественно новый уровень: правые существенно влияют на формирование правительств, государственные решения и приоритеты европейской политики.",color:"rgba(220,95,65,.37)"},
-  {a:80,b:100,title:"Глубокий правый поворот",description:"Правые силы играют определяющую роль в политике значительной части наблюдаемых стран и воздействуют на общий курс Европы.",color:"rgba(229,55,55,.42)"}
+  {a:0,b:20,title:"Минимальное влияние",description:"Правые партии слабо представлены в электоральной конкуренции и практически не влияют на состав правительств и государственную повестку.",color:"rgba(53,184,90,.20)",labelColor:"#35b85a"},
+  {a:20,b:40,title:"Ограниченное влияние",description:"Правые обладают заметной электоральной поддержкой в отдельных странах, но возможности воздействовать на решения правительства остаются ограниченными.",color:"rgba(215,200,90,.20)",labelColor:"#d7c85a"},
+  {a:40,b:60,title:"Значимое политическое влияние",description:"Правые становятся существенным фактором партийной конкуренции и способны влиять на политическую повестку, хотя не определяют общий курс.",color:"rgba(223,150,62,.23)",labelColor:"#df963e"},
+  {a:60,b:80,title:"Правый поворот",description:"Качественно новый уровень: правые существенно влияют на формирование правительств, государственные решения и приоритеты европейской политики.",color:"rgba(220,95,65,.37)",labelColor:"#dc5f41"},
+  {a:80,b:100,title:"Глубокий правый поворот",description:"Правые силы играют определяющую роль в политике значительной части наблюдаемых стран и воздействуют на общий курс Европы.",color:"rgba(229,55,55,.42)",labelColor:"#e53737"}
 ];
 function hideGaugeTooltip(){
   const tooltip=$("gaugeTooltip");
@@ -1380,6 +1465,8 @@ function showGaugeTooltip(index,event=null){
   if(!zone||!tooltip||!panel)return;
   $("gaugeTooltipRange").textContent=`${zone.a}–${zone.b} ПУНКТОВ`;
   $("gaugeTooltipTitle").textContent=zone.title;
+  $("gaugeTooltipRange").style.color=zone.labelColor;
+  $("gaugeTooltipTitle").style.color=zone.labelColor;
   $("gaugeTooltipDescription").textContent=zone.description;
   tooltip.hidden=false;
   const rect=panel.getBoundingClientRect();
@@ -1483,16 +1570,23 @@ async function loadAll(){
   state.dataWarnings=[];
   try{
     // Две самостоятельные ветки: рейтинговые графики POLITICO и месячный индекс «Данные».
-    const [allPartiesText,directoryText,paletteText,indexOutcome,classificationOutcome]=await Promise.all([
+    const [allPartiesText,directoryText,paletteText,indexOutcome,classificationOutcome,eventsOutcome]=await Promise.all([
       fetchText(ALL_PARTIES_TSV_URL),fetchText(DIRECTORY_TSV_URL),fetchText(PALETTE_TSV_URL),
       fetchText(BAROMETER_DATA_URL).then(value=>({value})).catch(error=>({error})),
-      fetchText(ALL_CLASSIFICATION_URL).then(value=>({value})).catch(error=>({error}))
+      fetchText(ALL_CLASSIFICATION_URL).then(value=>({value})).catch(error=>({error})),
+      fetchText(EVENTS_URL).then(value=>({value})).catch(error=>({error}))
     ]);
     const directory=loadDirectory(parseTable(directoryText,"Справочник"));
     const transformed=transformData(parseTable(allPartiesText,"Интерактив — все партии"),directory);
     const palette=loadPalette(parseTable(paletteText,"Палитра"));
     state.rows=transformed.pairedRows;state.allRows=transformed.allRows;
     state.directory=directory;state.palette=palette;
+    // События — необязательный источник. При временной ошибке оставляем ранее загруженные метки.
+    if(eventsOutcome.error)console.warn("События POLITICO пока недоступны:",eventsOutcome.error);
+    else{
+      try{state.events=loadPoliticalEvents(parseTable(eventsOutcome.value,"События_POLITICO",true));}
+      catch(error){console.warn("События POLITICO:",error);}
+    }
 
     // После добавления новой вкладки категории и русские названия отображаются сразу.
     state.extraDirectory=new Map();
