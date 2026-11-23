@@ -148,6 +148,14 @@
     .history-event-date{font-size:10px;color:#c9c9d2;font-weight:800;margin-bottom:2px}
     .history-event-text{font-size:10px;color:#9e9eaa;line-height:1.45}
     .history-empty{display:flex;align-items:center;justify-content:center;height:240px;color:#9b9ba5;font-size:13px;text-align:center;padding:0 18px}
+    /* Исторический график: подсказки по всей высоте области построения, не мешают Plotly */
+    #barometerHistoryChart{position:relative}
+    .history-hover-guide{position:absolute;z-index:8;width:0;border-left:1px dashed rgba(240,240,245,.78);pointer-events:none;display:none}
+    .history-hover-point{position:absolute;z-index:9;width:10px;height:10px;background:#f04424;border:2px solid #fff;border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;display:none;box-shadow:0 0 0 3px rgba(240,68,36,.16)}
+    .history-hover-card{position:absolute;z-index:10;min-width:112px;max-width:170px;padding:6px 9px;border:1px solid #56565e;background:rgba(16,16,19,.97);border-radius:6px;color:#fff;font-size:11px;line-height:1.5;box-shadow:0 7px 25px rgba(0,0,0,.42);pointer-events:none;display:none;white-space:nowrap}
+    .history-hover-card strong{font-weight:850}
+    .history-event-tooltip{position:absolute;z-index:11;max-width:min(260px,70%);padding:9px 11px;border:1px solid rgba(240,68,36,.72);background:rgba(26,20,22,.98);border-radius:8px;color:#f4f4f5;font-size:10px;line-height:1.5;box-shadow:0 9px 30px rgba(0,0,0,.48);pointer-events:none;display:none}
+    .history-event-tooltip strong{color:#ff9d89;font-size:10px}
     .jump-btn:hover{background:#3b2420;border-color:#a34c3b}
     .barometer-error{color:#ff9b91!important}
 
@@ -1813,34 +1821,82 @@ function historyYRange(series){
   return [lo,hi];
 }
 function attachHistoryCrosshair(gd){
-  if(gd.__historyCrosshairBound)return;
-  gd.__historyCrosshairBound=true;
-  gd.on("plotly_hover",event=>{
-    const point=event?.points?.find(p=>p.curveNumber===0&&Number.isFinite(Number(p.y)))||
-      event?.points?.find(p=>Number.isFinite(Number(p.y)));
-    if(!point)return;
-    const x=point.x instanceof Date?point.x:parseDate(point.x);
-    if(!x||Number.isNaN(x.getTime()))return;
-    const hoverX=dateKey(x),value=Number(point.y);
-    const base=gd.__historyBase||{shapes:[],annotations:[]};
-    const range=gd._fullLayout?.xaxis?.range;
-    const rightEdge=range?.length===2?new Date(range[1]).getTime():NaN;
-    const leftEdge=range?.length===2?new Date(range[0]).getTime():NaN;
-    const nearRight=Number.isFinite(rightEdge)&&Number.isFinite(leftEdge)&&
-      x.getTime()>rightEdge-(rightEdge-leftEdge)*.21;
-    const marker={type:"line",xref:"x",yref:"paper",x0:hoverX,x1:hoverX,y0:0,y1:1,
-      line:{color:"rgba(246,246,250,.75)",width:1,dash:"dot"}};
-    const label={xref:"x",yref:"y",x:hoverX,y:value,
-      xanchor:nearRight?"right":"left",yanchor:"bottom",xshift:nearRight?-10:10,yshift:12,
-      showarrow:false,text:`<b>${escapeHtml(formatDate(x,true))}</b><br>Барометр: ${escapeHtml(formatNumber(value,1))}`,
-      align:"left",font:{color:"#fff",size:11},bgcolor:"rgba(16,16,19,.98)",
-      bordercolor:"#6c3d38",borderwidth:.7,borderpad:6};
-    Plotly.relayout(gd,{shapes:[...base.shapes,marker],annotations:[...base.annotations,label]});
-  });
-  gd.on("plotly_unhover",()=>{
-    const base=gd.__historyBase||{shapes:[],annotations:[]};
-    Plotly.relayout(gd,{shapes:base.shapes,annotations:base.annotations});
-  });
+  // Независимая от hoverdistance Plotly подсказка: срабатывает в любом месте
+  // графической области, даже если курсор далеко от самой красной линии.
+  const ids={guide:"historyHoverGuide",point:"historyHoverPoint",card:"historyHoverCard",event:"historyEventTooltip"};
+  const ensureElement=(id,className)=>{
+    let el=gd.querySelector(`#${id}`);
+    if(!el){el=document.createElement("div");el.id=id;el.className=className;el.setAttribute("aria-hidden","true");gd.appendChild(el);}
+    return el;
+  };
+  const guide=ensureElement(ids.guide,"history-hover-guide");
+  const marker=ensureElement(ids.point,"history-hover-point");
+  const card=ensureElement(ids.card,"history-hover-card");
+  const eventTooltip=ensureElement(ids.event,"history-event-tooltip");
+  const hide=()=>{for(const el of [guide,marker,card,eventTooltip])el.style.display="none";};
+  const onMove=event=>{
+    const points=gd.__historyPoints||[];
+    const full=gd._fullLayout;
+    const plot=gd.querySelector(".nsewdrag");
+    const range=full?.xaxis?.range;
+    if(!points.length||!plot||!range||range.length!==2){hide();return;}
+    const plotRect=plot.getBoundingClientRect(),hostRect=gd.getBoundingClientRect();
+    if(!plotRect.width||!plotRect.height||event.clientX<plotRect.left||event.clientX>plotRect.right||event.clientY<plotRect.top||event.clientY>plotRect.bottom){hide();return;}
+    const start=Date.parse(range[0]),finish=Date.parse(range[1]);
+    if(!Number.isFinite(start)||!Number.isFinite(finish)||finish<=start){hide();return;}
+    const xMin=plotRect.left-hostRect.left,yMin=plotRect.top-hostRect.top;
+    const t=start+(event.clientX-plotRect.left)/plotRect.width*(finish-start);
+    let selected=points[0],bestDistance=Infinity;
+    for(const point of points){
+      const distance=Math.abs(Date.parse(dateKey(point.date))-t);
+      if(distance<bestDistance){bestDistance=distance;selected=point;}
+    }
+    const x=Date.parse(dateKey(selected.date));
+    const localX=xMin+(x-start)/(finish-start)*plotRect.width;
+    const yRange=full.yaxis?.range||[0,100];
+    const yLow=Math.min(...yRange),yHigh=Math.max(...yRange);
+    const localY=yMin+(1-(selected.value-yLow)/(yHigh-yLow||1))*plotRect.height;
+    guide.style.display="block";
+    guide.style.left=`${localX}px`;
+    guide.style.top=`${yMin}px`;
+    guide.style.height=`${plotRect.height}px`;
+    marker.style.display="block";
+    marker.style.left=`${localX}px`;
+    marker.style.top=`${localY}px`;
+    card.style.display="block";
+    card.innerHTML=`<strong>${escapeHtml(formatDate(selected.date,true))}</strong><div>Барометр: <strong>${escapeHtml(formatNumber(selected.value,1))}</strong></div>`;
+    // Отводим подсказку от правого края и не выпускаем за границы графика.
+    const cardWidth=card.offsetWidth||125,cardHeight=card.offsetHeight||46;
+    const preferLeft=localX+cardWidth+18>xMin+plotRect.width;
+    card.style.left=`${Math.max(xMin+4,Math.min(xMin+plotRect.width-cardWidth-4,preferLeft?localX-cardWidth-12:localX+12))}px`;
+    card.style.top=`${Math.max(yMin+5,Math.min(yMin+plotRect.height-cardHeight-5,localY-cardHeight-10))}px`;
+    // Линии политических событий тоже интерактивны, а не только номера сверху.
+    const marks=gd.__historyEventMarks||[];
+    let nearestEvent=null,nearestPixel=Infinity;
+    for(const item of marks){
+      const et=Date.parse(dateKey(item.date));
+      const px=xMin+(et-start)/(finish-start)*plotRect.width;
+      const distance=Math.abs(event.clientX-hostRect.left-px);
+      if(distance<nearestPixel){nearestPixel=distance;nearestEvent=item;}
+    }
+    if(nearestEvent&&nearestPixel<=9){
+      eventTooltip.innerHTML=`<strong>${escapeHtml(formatDate(nearestEvent.date,true))}</strong><div>${escapeHtml(nearestEvent.label)}</div>`;
+      eventTooltip.style.display="block";
+      const tipWidth=eventTooltip.offsetWidth,tipHeight=eventTooltip.offsetHeight;
+      const desiredX=event.clientX-hostRect.left+12;
+      const desiredY=event.clientY-hostRect.top+14;
+      eventTooltip.style.left=`${Math.max(xMin+4,Math.min(xMin+plotRect.width-tipWidth-4,desiredX))}px`;
+      eventTooltip.style.top=`${Math.max(yMin+4,Math.min(yMin+plotRect.height-tipHeight-4,desiredY))}px`;
+    }else eventTooltip.style.display="none";
+  };
+  if(gd.__historyPointerMoveHandler){
+    gd.removeEventListener("pointermove",gd.__historyPointerMoveHandler);
+    gd.removeEventListener("pointerleave",gd.__historyPointerLeaveHandler);
+  }
+  gd.__historyPointerMoveHandler=onMove;
+  gd.__historyPointerLeaveHandler=hide;
+  gd.addEventListener("pointermove",onMove);
+  gd.addEventListener("pointerleave",hide);
 }
 function renderBarometerHistoryModal(){
   const chartHost=$("barometerHistoryChart"),statsHost=$("barometerHistoryStats"),eventsHost=$("barometerHistoryEvents");
@@ -1906,7 +1962,10 @@ function renderBarometerHistoryModal(){
     line:{color:'rgba(255,111,89,.45)',width:1.1,dash:'dot'}}));
   const annotations=eventMarks.map((item,i)=>({xref:'x',yref:'paper',x:dateKey(item.date),y:1.04,
     text:String(i+1),showarrow:false,font:{size:9,color:'#ffac9e'},
-    bgcolor:'rgba(240,68,36,.12)',bordercolor:'rgba(240,68,36,.48)',borderwidth:.6,borderpad:3}));
+    bgcolor:'rgba(240,68,36,.12)',bordercolor:'rgba(240,68,36,.48)',borderwidth:.6,borderpad:3,
+    hovertext:`<b>${escapeHtml(formatDate(item.date,true))}</b><br>${escapeHtml(item.label)}`,
+    captureevents:true,
+    hoverlabel:{bgcolor:'#231a1d',bordercolor:'#f04424',font:{color:'#f4f4f5',size:11}}}));
   const start=series[0].date,last=series[series.length-1].date;
   const first=new Date(start.getFullYear(),start.getMonth(),1);
   const lastTick=new Date(last.getFullYear(),last.getMonth(),1);
@@ -1930,6 +1989,7 @@ function renderBarometerHistoryModal(){
   Plotly.react(chartHost,[line,extremeMarkers],layout,config).then(()=>{
     chartHost.__historyBase={shapes,annotations};
     chartHost.__historyPoints=series;
+    chartHost.__historyEventMarks=eventMarks;
     attachHistoryCrosshair(chartHost);
     Plotly.Plots.resize(chartHost);
   });
