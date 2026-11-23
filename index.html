@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- RELEASE 2026-11-23-V2: HISTORY_MODAL / COALITIONS2 / ROLE_ONLY_GOV_INDEX / INDEPENDENT_HISTORY -->
+<!-- RELEASE 2026-11-23-V4: HISTORY_2024 / FIXED_11_TO_12 / SELECTIVE_EVENTS / SINGLE_HOVER_DATE -->
 <html lang="ru">
 <head>
   <meta charset="utf-8">
@@ -498,7 +498,7 @@
       <div class="history-head">
         <div>
           <h3 id="historyModalTitle" class="history-title">История измерений барометра</h3>
-          <div class="history-subtitle">Помесячная динамика сводного индекса. <span id="historyCoverageSummary"></span></div>
+          <div class="history-subtitle">Помесячная динамика сводного индекса с января 2024 года.</div>
         </div>
         <button id="historyModalClose" class="history-close" type="button" aria-label="Закрыть окно">×</button>
       </div>
@@ -1671,69 +1671,72 @@ async function fetchFirstAvailableCoalitions(sheetNames){
   }
   throw new Error(`Не удалось загрузить вкладки коалиций. ${errors.join("; ")}`);
 }
+const HISTORY_START_DATE = new Date(2024,0,1);
 function calculateBarometerSeries(){
-  // Для истории используем исключительно «Интерактив_все_партии»:
-  // state.rows — уже сопоставленные партии мониторинга и конкуренты из этой вкладки.
-  // Месячный срез — 1-е число, как в основной методологии.
+  // История использует рейтинги той же вкладки, что и режимы «Рейтинг»/«Отрыв»:
+  // «Интерактив_все_партии». Для правительств — помесячные коды «Коалиции2».
+  // До появления французской пары расчёт идёт по фиксированным 11 странам;
+  // с первого месяца с французской парой — по всем 12. Не заменяем пропуски нулями.
   const monitors=getMonitorPartiesByCountry();
   const rowsByMonth=new Map();
   for(const r of state.rows){
-    if(!r.date||r.date.getDate()!==1||r.date<MIN_MONITORING_DATE)continue;
+    if(!r.date||r.date.getDate()!==1||r.date<HISTORY_START_DATE)continue;
     const key=dateKey(r.date);
-    if(!rowsByMonth.has(key))rowsByMonth.set(key,{date:r.date,byCountry:new Map()});
+    if(!rowsByMonth.has(key)) rowsByMonth.set(key,{date:r.date,byCountry:new Map()});
     const byCountry=rowsByMonth.get(key).byCountry;
     if(!byCountry.has(r.country))byCountry.set(r.country,[]);
     byCountry.get(r.country).push(r);
   }
   const months=[...rowsByMonth.values()].sort((a,b)=>a.date-b.date);
-  const out=[];
-  let previousPoint=null;
+  const result=[];
   const mean=values=>values.reduce((sum,x)=>sum+x,0)/values.length;
+  const normalCountries=COUNTRIES.map(c=>c.key).filter(c=>c!=="Франция");
+  let franceBegun=false;
+  let lastPoint=null;
   for(const month of months){
-    const countries=[],electoral=[],government=[];
+    const countryObservations=new Map();
     for(const country of COUNTRIES.map(c=>c.key)){
       const expected=(monitors.get(country)||[]).map(norm);
       if(!expected.length)continue;
-      const rows=(month.byCountry.get(country)||[])
-        .filter(r=>expected.includes(norm(r.party))&&Number.isFinite(r.rating)&&Number.isFinite(r.competitorRating)&&r.rating>=0&&r.competitorRating>=0);
-      // Если одна из нескольких партий мониторинга ещё не существовала,
-      // берём доступные наблюдения, не приписывая ей рейтинг задним числом.
-      if(!rows.length)continue;
-      const distinct=new Map();
-      for(const row of rows)distinct.set(norm(row.party),row);
-      const available=[...distinct.values()];
-      const ranked=available.map(r=>({...r,gap:r.rating-r.competitorRating}))
+      const matches=(month.byCountry.get(country)||[]).filter(r=>
+        expected.includes(norm(r.party))&&Number.isFinite(r.rating)&&
+        Number.isFinite(r.competitorRating)&&r.rating>=0&&r.competitorRating>=0);
+      if(!matches.length)continue;
+      const unique=new Map();
+      for(const row of matches)unique.set(norm(row.party),row);
+      const ranked=[...unique.values()].map(r=>({...r,gap:r.rating-r.competitorRating}))
         .sort((a,b)=>b.gap-a.gap||b.rating-a.rating);
       const leader=ranked[0];
       const denominator=leader.rating+leader.competitorRating;
       if(!(denominator>0))continue;
-      // Без переноса будущей кодировки правительств в прошлое.
       const history=state.coalitionHistory?.get(country)||[];
       let lo=0,hi=history.length;
       while(lo<hi){const mid=(lo+hi)>>1;if(history[mid].date<=month.date)lo=mid+1;else hi=mid;}
       if(!lo)continue;
       const role=Number(history[lo-1].role);
       if(!Number.isInteger(role)||!(role in ROLE_WEIGHTS))continue;
-      countries.push(country);
-      electoral.push(100*leader.rating/denominator);
-      government.push(100*ROLE_WEIGHTS[role]);
+      countryObservations.set(country,{
+        electoral:100*leader.rating/denominator,
+        government:100*ROLE_WEIGHTS[role]
+      });
     }
-    // Не создаём фиктивную точку при отсутствии рейтингов.
-    if(!countries.length)continue;
-    const e=mean(electoral),g=mean(government);
-    const value=0.6*e+0.4*g;
-    const sameCountries=previousPoint&&previousPoint.countries.length===countries.length&&
-      countries.every((country,index)=>country===previousPoint.countries[index]);
-    const adjacent=previousPoint&&month.date.getFullYear()*12+month.date.getMonth()===
-      previousPoint.date.getFullYear()*12+previousPoint.date.getMonth()+1;
-    const point={date:month.date,value,coverage:countries.length,countries,complete:countries.length===COUNTRIES.length,
-      // Колебания и события выделяем только при одинаковом составе стран и соседних месяцах.
-      delta:adjacent&&sameCountries?value-previousPoint.value:null,
-      previousDate:adjacent&&sameCountries?previousPoint.date:null};
-    out.push(point);
-    previousPoint=point;
+    if(countryObservations.has("Франция"))franceBegun=true;
+    const targetCountries=franceBegun?[...normalCountries,"Франция"]:normalCountries;
+    // Не вычислять среднее по неполной выборке и не подставлять рейтинги задним числом.
+    if(!targetCountries.every(country=>countryObservations.has(country)))continue;
+    const e=mean(targetCountries.map(country=>countryObservations.get(country).electoral));
+    const g=mean(targetCountries.map(country=>countryObservations.get(country).government));
+    const value=.6*e+.4*g;
+    const contiguous=lastPoint&&
+      month.date.getFullYear()*12+month.date.getMonth()===
+      lastPoint.date.getFullYear()*12+lastPoint.date.getMonth()+1;
+    const sameSample=lastPoint&&lastPoint.coverage===targetCountries.length;
+    const point={date:month.date,value,coverage:targetCountries.length,countries:targetCountries,
+      delta:contiguous&&sameSample?value-lastPoint.value:null};
+    result.push(point);
+    lastPoint=point;
   }
-  return out;
+  return result;
 }
 function buildBarometerHistoryStats(series){
   if(!series.length) return null;
@@ -1745,22 +1748,47 @@ function buildBarometerHistoryStats(series){
   return {minPoint,maxPoint,lastPoint,firstPoint,totalDelta};
 }
 function buildBarometerHistoryEvents(series){
-  if(series.length<2||!state.events.length)return [];
-  const candidates=series.filter(p=>p.delta!==null)
-    .map(point=>({point,absDelta:Math.abs(point.delta)}))
-    .filter(item=>item.absDelta>=2.2).sort((a,b)=>b.absDelta-a.absDelta);
-  const picked=[],used=new Set();
-  for(const {point} of candidates){
-    if(picked.length>=5)break;
-    // События только в период между двумя соседними сопоставимыми срезами.
-    const nearest=state.events.filter(event=>event.date>point.previousDate&&event.date<=point.date&&
-      point.countries.includes(event.country)&&!used.has(`${event.country}|${dateKey(event.date)}|${event.label}`))
-      .sort((a,b)=>b.date-a.date)[0];
-    if(!nearest)continue;
-    used.add(`${nearest.country}|${dateKey(nearest.date)}|${nearest.label}`);
-    picked.push({date:point.date,eventDate:nearest.date,label:`${nearest.country}: ${nearest.label}`,delta:point.delta,value:point.value});
+  if(!series.length)return [];
+  const first=series[0].date,last=series[series.length-1].date;
+  const mark=[];
+  const election=new Date(2024,5,9);
+  if(election>=first&&election<=new Date(last.getFullYear(),last.getMonth()+1,0)){
+    mark.push({date:election,label:"Выборы в Европейский парламент 2024"});
   }
-  return picked.sort((a,b)=>a.date-b.date);
+  // Официальные даты переходов уже внесены в реестр «Переходы».
+  // «Коалиции2» содержит месячные коды: здесь определяем только смену 0 ↔ 1/2/3.
+  const preciseDates={
+    "Нидерланды|2024-08-01":"2024-07-02",
+    "Нидерланды|2025-07-01":"2025-06-03",
+    "Швеция|2026-10-01":"2026-09-17"
+  };
+  const labels={
+    "Нидерланды|2024-08-01":"Нидерланды: PVV входит в правительство Схофа",
+    "Нидерланды|2025-07-01":"Нидерланды: PVV выходит из правящей коалиции",
+    "Швеция|2026-10-01":"Швеция: прекращение прежней поддержки кабинета со стороны SD"
+  };
+  for(const country of COUNTRIES.map(c=>c.key)){
+    const history=state.coalitionHistory?.get(country)||[];
+    let prior=null;
+    for(const entry of history){
+      if(entry.date<first){prior=entry;continue;}
+      if(prior){
+        const before=Number(prior.role),after=Number(entry.role);
+        if((before===0&&after>0)||(before>0&&after===0)){
+          const key=`${country}|${dateKey(entry.date)}`;
+          const eventDay=parseDate(preciseDates[key]||dateKey(entry.date));
+          const parties=(getMonitorPartiesByCountry().get(country)||[]).join(" / ");
+          const fallBack=after>0
+            ?`${country}: ${parties} начинает участие в правительстве или его поддержку`
+            :`${country}: ${parties} прекращает участие в правительстве или его поддержку`;
+          if(eventDay>=first&&eventDay<=new Date(last.getFullYear(),last.getMonth()+1,0))
+            mark.push({date:eventDay,label:labels[key]||fallBack});
+        }
+      }
+      prior=entry;
+    }
+  }
+  return mark.sort((a,b)=>a.date-b.date).filter((r,i,arr)=>i===0||dateKey(r.date)!==dateKey(arr[i-1].date)||r.label!==arr[i-1].label);
 }
 const HISTORY_RU_MONTHS=["Янв","Фев","Мар","Апр","Май","Июн","Июл","Авг","Сен","Окт","Ноя","Дек"];
 function historyMonthTicks(first,last){
@@ -1794,26 +1822,20 @@ function attachHistoryCrosshair(gd){
     const x=point.x instanceof Date?point.x:parseDate(point.x);
     if(!x||Number.isNaN(x.getTime()))return;
     const hoverX=dateKey(x),value=Number(point.y);
-    const raw=gd.__historyPoints?.find(p=>dateKey(p.date)===hoverX);
     const base=gd.__historyBase||{shapes:[],annotations:[]};
-    const full=gd._fullLayout;
-    const r=full?.xaxis?.range;
-    const rightEdge=r?.length===2?new Date(r[1]).getTime():NaN;
-    const leftEdge=r?.length===2?new Date(r[0]).getTime():NaN;
-    const nearRight=Number.isFinite(rightEdge)&&Number.isFinite(leftEdge)&&x.getTime()>rightEdge-(rightEdge-leftEdge)*.21;
-    const extra=raw?` · ${raw.coverage}/12 стран`:"";
+    const range=gd._fullLayout?.xaxis?.range;
+    const rightEdge=range?.length===2?new Date(range[1]).getTime():NaN;
+    const leftEdge=range?.length===2?new Date(range[0]).getTime():NaN;
+    const nearRight=Number.isFinite(rightEdge)&&Number.isFinite(leftEdge)&&
+      x.getTime()>rightEdge-(rightEdge-leftEdge)*.21;
     const marker={type:"line",xref:"x",yref:"paper",x0:hoverX,x1:hoverX,y0:0,y1:1,
       line:{color:"rgba(246,246,250,.75)",width:1,dash:"dot"}};
-    const popups=[
-      {xref:"x",yref:"paper",x:hoverX,y:0.97,xanchor:nearRight?"right":"left",yanchor:"top",
-        xshift:nearRight?-9:9,showarrow:false,text:formatDate(x,true),
-        font:{color:"#eeeef1",size:10},bgcolor:"rgba(16,16,19,.96)",bordercolor:"#5a5a64",borderwidth:.6,borderpad:4},
-      {xref:"x",yref:"y",x:hoverX,y:value,xanchor:nearRight?"right":"left",yanchor:"bottom",
-        xshift:nearRight?-9:9,yshift:9,showarrow:false,
-        text:`<b>${escapeHtml(formatNumber(value,1))} из 100</b>${escapeHtml(extra)}`,
-        font:{color:"#fff",size:11},bgcolor:"rgba(16,16,19,.97)",bordercolor:"#6c3d38",borderwidth:.6,borderpad:5}
-    ];
-    Plotly.relayout(gd,{shapes:[...base.shapes,marker],annotations:[...base.annotations,...popups]});
+    const label={xref:"x",yref:"y",x:hoverX,y:value,
+      xanchor:nearRight?"right":"left",yanchor:"bottom",xshift:nearRight?-10:10,yshift:12,
+      showarrow:false,text:`<b>${escapeHtml(formatDate(x,true))}</b><br>Барометр: ${escapeHtml(formatNumber(value,1))}`,
+      align:"left",font:{color:"#fff",size:11},bgcolor:"rgba(16,16,19,.98)",
+      bordercolor:"#6c3d38",borderwidth:.7,borderpad:6};
+    Plotly.relayout(gd,{shapes:[...base.shapes,marker],annotations:[...base.annotations,label]});
   });
   gd.on("plotly_unhover",()=>{
     const base=gd.__historyBase||{shapes:[],annotations:[]};
@@ -1822,33 +1844,25 @@ function attachHistoryCrosshair(gd){
 }
 function renderBarometerHistoryModal(){
   const chartHost=$("barometerHistoryChart"),statsHost=$("barometerHistoryStats"),eventsHost=$("barometerHistoryEvents");
-  const coverageNote=$("historyCoverageSummary");
   if(!chartHost||!statsHost||!eventsHost)return;
   const series=state.barometerHistory||[];
   if(!series.length){
     chartHost.innerHTML='<div class="history-empty">Нет доступных месячных рейтингов для расчёта истории барометра.</div>';
     statsHost.innerHTML='';eventsHost.innerHTML='';
-    if(coverageNote)coverageNote.textContent='';
     return;
   }
   const stats=buildBarometerHistoryStats(series);
   const eventMarks=buildBarometerHistoryEvents(series);
-  const coverages=series.map(p=>p.coverage);
-  const minCoverage=Math.min(...coverages),maxCoverage=Math.max(...coverages);
-  if(coverageNote){
-    coverageNote.textContent=minCoverage===12?'':
-      `Исторический расчёт по доступным странам (${minCoverage}–${maxCoverage} из 12); изменение состава снижает сопоставимость ранних срезов.`;
-  }
   statsHost.innerHTML=`
     <div class="history-stat">
       <div class="history-stat-label">Минимум</div>
       <div class="history-stat-value">${formatNumber(stats.minPoint.value,1)}</div>
-      <div class="history-stat-note">${escapeHtml(formatDate(stats.minPoint.date,true))} · ${stats.minPoint.coverage}/12 стран</div>
+      <div class="history-stat-note">${escapeHtml(formatDate(stats.minPoint.date,true))}</div>
     </div>
     <div class="history-stat">
       <div class="history-stat-label">Максимум</div>
       <div class="history-stat-value">${formatNumber(stats.maxPoint.value,1)}</div>
-      <div class="history-stat-note">${escapeHtml(formatDate(stats.maxPoint.date,true))} · ${stats.maxPoint.coverage}/12 стран</div>
+      <div class="history-stat-note">${escapeHtml(formatDate(stats.maxPoint.date,true))}</div>
     </div>
     <div class="history-stat">
       <div class="history-stat-label">Изменение за весь период</div>
@@ -1860,11 +1874,11 @@ function renderBarometerHistoryModal(){
       <div class="history-event-item">
         <div class="history-event-number">${index+1}</div>
         <div>
-          <div class="history-event-date">${escapeHtml(formatDate(item.eventDate,true))}</div>
+          <div class="history-event-date">${escapeHtml(formatDate(item.date,true))}</div>
           <div class="history-event-text">${escapeHtml(item.label)}</div>
         </div>
       </div>`).join('');
-  }else eventsHost.innerHTML='<div class="history-event-text">События для сопоставимых сильных колебаний не выделены.</div>';
+  }else eventsHost.innerHTML='<div class="history-event-text">Событий выбранных типов за период нет.</div>';
   if(!window.Plotly){chartHost.innerHTML='<div class="history-empty">Не удалось загрузить библиотеку графиков.</div>';return;}
   const chartPoints=[];
   for(const p of series){
@@ -1880,7 +1894,7 @@ function renderBarometerHistoryModal(){
     y:chartPoints.map(p=>p.value===null?null:Number(p.value.toFixed(4))),
     type:'scatter',mode:'lines',name:'Барометр',connectgaps:false,
     line:{color:'#f04424',width:3.2,shape:'linear'},
-    hovertemplate:'%{x|%d.%m.%Y}<br>Барометр: <b>%{y:.1f}</b><extra></extra>'
+    hoverinfo:'none'
   };
   const extrema=stats.minPoint===stats.maxPoint?[stats.minPoint]:[stats.minPoint,stats.maxPoint];
   const extremeMarkers={
@@ -1902,7 +1916,7 @@ function renderBarometerHistoryModal(){
     shapes,annotations,paper_bgcolor:'#141418',plot_bgcolor:'#141418',showlegend:false,autosize:true,
     height:mobile?360:520,margin:{l:60,r:20,t:eventMarks.length?36:20,b:56},
     font:{family:'Inter, Arial, sans-serif',color:'#f4f4f5',size:11},
-    hovermode:'x',hoverdistance:38,hoverlabel:{bgcolor:'#242429',bordercolor:'#55555f',font:{color:'#fff',size:11}},
+    hovermode:'closest',hoverdistance:48,hoverlabel:{bgcolor:'#242429',bordercolor:'#55555f',font:{color:'#fff',size:11}},
     xaxis:{type:'date',range:[dateKey(new Date(first.getFullYear(),first.getMonth(),first.getDate()-9)),dateKey(new Date(last.getFullYear(),last.getMonth(),last.getDate()+9))],
       tickmode:'array',tickvals:ticks.tickvals,ticktext:ticks.ticktext,
       showgrid:false,zeroline:false,linecolor:'#3c3c43',tickfont:{color:'#a5a5af',size:10},
