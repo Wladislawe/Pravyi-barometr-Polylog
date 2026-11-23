@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- RELEASE 2026-11-23-V1: BAROMETER_HISTORY_MODAL / COALITIONS2_FALLBACK -->
+<!-- RELEASE 2026-11-23-V2: HISTORY_MODAL / COALITIONS2 / ROLE_ONLY_GOV_INDEX / INDEPENDENT_HISTORY -->
 <html lang="ru">
 <head>
   <meta charset="utf-8">
@@ -521,7 +521,7 @@
   Источники:
   - Историческая база всех партий: опубликованная TSV-вкладка в длинном формате.
   - Справочник и Палитра: опубликованные TSV-вкладки.
-  - Коалиции и Портфели: Google Visualization endpoint по имени листа (CSV).
+  - Роль правых 0–3: Коалиции2 (резервная Коалиции), Google Visualization CSV; Портфели не нужны для расчёта.
 
   Рейтинги партий мониторинга и конкурентов собираются из исторической базы по ключам справочника.
 */
@@ -540,7 +540,6 @@ const EVENTS_URL = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gv
 const EVENT_COLOR = "#92d9e8";
 const EXCLUDED_EVENT_DATES = new Set(["2022-02-24"]);
 const COALITION_SHEETS = ["Коалиции2","Коалиции"];
-const PORTFOLIOS_URL = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent("Портфели")}`;
 const REFRESH_EVERY_MINUTES = 10;
 const MIN_MONITORING_DATE = new Date(2015,0,1); // Нижняя граница отображаемого периода
 const STORAGE_KEY = "polylog-right-barometer-view-v2";
@@ -586,7 +585,7 @@ const FLAG_SVGS = {
 };
 
 const state = {
-  rows:[], allRows:[], indexRows:[], directory:[], extraDirectory:new Map(), palette:new Map(), coalitions:[], portfolios:[], events:[],
+  rows:[], allRows:[], indexRows:[], directory:[], extraDirectory:new Map(), palette:new Map(), coalitions:[], coalitionHistory:new Map(), portfolios:[], events:[],
   selectedCountry:"", chartMode:"rating", timeRange:"6m", modePreference:"auto", effectiveMode:"desktop",
   lastSuccessfulLoad:null, loading:false, barometer:null, barometerHistory:[], coalitionSource:"", dataWarnings:[]
 };
@@ -1450,25 +1449,19 @@ function pollingSnapshot(day){
   }
   return result;
 }
-function governmentSnapshot(day,allowFirst=false){
+function governmentSnapshot(day){
   const result=new Map(),assumptions=[];
   for(const country of COUNTRIES.map(c=>c.key)){
-    const history=state.coalitions.filter(r=>r.country===country).sort((a,b)=>a.date-b.date);
-    let eligible=history.filter(r=>r.date<=day);
-    if(!eligible.length&&allowFirst&&history.length){eligible=[history[0]];assumptions.push(country);}
-    if(!eligible.length) throw new Error(`«Коалиции»: нет записи о правительстве для ${country} на ${formatDate(day)}.`);
-    const record=eligible[eligible.length-1];
+    const history=state.coalitionHistory?.get(country)||[];
+    // Выбираем последнее значение, известное к дате среза; будущее не переносим в прошлое.
+    let lo=0,hi=history.length;
+    while(lo<hi){const mid=(lo+hi)>>1;if(history[mid].date<=day)lo=mid+1;else hi=mid;}
+    if(!lo) throw new Error(`«${state.coalitionSource||"Коалиции2"}»: нет роли для ${country} на ${formatDate(day)}.`);
+    const record=history[lo-1];
     const role=Number(record.role);
     if(!Number.isInteger(role)||!(role in ROLE_WEIGHTS)) throw new Error(`${country}: некорректная роль правых партий (${record.role}).`);
-    if(role>=2&&state.portfolios.length){
-      const cutoff=record.date>day?record.date:day;
-      const portHistory=state.portfolios.filter(r=>r.country===country&&r.date<=cutoff).sort((a,b)=>a.date-b.date);
-      if(!portHistory.length) throw new Error(`${country}: нет данных «Портфелей» для проверки участия партии в кабинете.`);
-      const latestDate=portHistory[portHistory.length-1].date;
-      const members=portHistory.filter(r=>dateKey(r.date)===dateKey(latestDate)&&r.ministers!==null&&r.ministers>0).map(r=>norm(r.party));
-      const monitored=(getMonitorPartiesByCountry().get(country)||[]).map(norm);
-      if(!members.some(p=>monitored.includes(p))) throw new Error(`${country}: роль ${role} указана, но партия мониторинга не найдена в «Портфелях».`);
-    }
+    // Нормативная роль 0–3 берётся из вкладки «Коалиции2» («Коалиции» — резерв).
+    // «Портфели» — справочный источник, он не должен блокировать историю индекса.
     result.set(country,{role,weight:ROLE_WEIGHTS[role],status:record.status,cabinet:record.cabinet,date:record.date});
   }
   return {result,assumptions};
@@ -1489,7 +1482,7 @@ function calculateBarometer(){
   }
   if(!current||!old)throw new Error("«Данные»: нужны два полных соседних месячных среза на 1-е число.");
   const currentGov=governmentSnapshot(today,false);
-  const oldGov=governmentSnapshot(previous,true);
+  const oldGov=governmentSnapshot(previous);
   const mean=values=>values.reduce((a,b)=>a+b,0)/values.length;
   const eNow=mean([...current.values()].map(x=>x.advantage));
   const ePrev=mean([...old.values()].map(x=>x.advantage));
@@ -1612,7 +1605,9 @@ function renderBarometer(d){
 function setBarometerError(error){
   console.error("Ошибка расчёта барометра:",error);
   state.barometer=null;
-  $("gaugeSvg").innerHTML='<text x="320" y="220" fill="#ff9b91" font-size="14" text-anchor="middle">Барометр временно недоступен</text>';
+  $("gaugeSvg").innerHTML='<text x="320" y="210" fill="#ff9b91" font-size="14" text-anchor="middle">Барометр временно недоступен</text>';
+  const gaugeMessage=String(error?.message||"Ошибка загрузки данных").slice(0,180);
+  $("gaugeSvg").innerHTML+=`<text x="320" y="240" fill="#9d9da6" font-size="10" text-anchor="middle">${escapeHtml(gaugeMessage)}</text>`;
   $("barometerDate").textContent="Последний срез: —";
   for(const id of ["barometerDelta","barometerLeaders","barometerGap","barometerTop"]){$(id).textContent="—";}
   $("barometerDeltaNote").textContent="Нет подтверждённого сравнения";
@@ -1645,6 +1640,37 @@ async function fetchFirstAvailableSheet(sheetNames,label){
   }
   throw new Error(`${label}: не удалось загрузить ни один лист (${errors.join("; ")})`);
 }
+function buildCoalitionHistory(rows){
+  const byCountry=new Map();
+  for(const row of rows){
+    if(!byCountry.has(row.country)) byCountry.set(row.country,[]);
+    byCountry.get(row.country).push(row);
+  }
+  for(const records of byCountry.values()) records.sort((a,b)=>a.date-b.date);
+  return byCountry;
+}
+async function fetchFirstAvailableCoalitions(sheetNames){
+  const errors=[];
+  for(const sheetName of sheetNames){
+    try{
+      const text=await fetchSheetByName(sheetName);
+      const rows=loadCoalitions(parseTable(text,sheetName,true));
+      // Проверяем структуру и полноту выбранного источника, прежде чем использовать.
+      const present=new Set(rows.map(row=>row.country));
+      const missing=COUNTRIES.filter(country=>!present.has(country.key)).map(country=>country.key);
+      const bad=rows.find(row=>!Number.isInteger(row.role)||!(row.role in ROLE_WEIGHTS));
+      if(missing.length) throw new Error(`нет стран: ${missing.join(", ")}`);
+      if(bad) throw new Error(`роль вне шкалы 0–3: ${bad.country} ${dateKey(bad.date)}`);
+      if(sheetName!==sheetNames[0]) console.warn(`Основной лист недоступен; использован резервный «${sheetName}». Исторические значения могут быть неполными.`);
+      return {sheetName,rows};
+    }catch(error){
+      const message=`${sheetName}: ${error.message||error}`;
+      errors.push(message);
+      console.warn("Проверка листа коалиций:",message);
+    }
+  }
+  throw new Error(`Не удалось загрузить вкладки коалиций. ${errors.join("; ")}`);
+}
 function calculateBarometerSeries(){
   const uniqueDates=[...new Map(state.indexRows.filter(r=>r.date&&r.date.getDate()===1).map(r=>[dateKey(r.date),r.date])).values()].sort((a,b)=>a-b);
   const series=[];
@@ -1652,7 +1678,7 @@ function calculateBarometerSeries(){
   for(const day of uniqueDates){
     try{
       const poll=pollingSnapshot(day);
-      const gov=governmentSnapshot(day,true);
+      const gov=governmentSnapshot(day);
       const mean=values=>values.reduce((a,b)=>a+b,0)/values.length;
       const e=mean([...poll.values()].map(x=>x.advantage));
       const g=100*mean([...gov.result.values()].map(x=>x.weight));
@@ -1681,7 +1707,7 @@ function buildBarometerHistoryEvents(series){
     .filter(item=>item.absDelta>=2.2).sort((a,b)=>b.absDelta-a.absDelta);
   const usedDates=new Set(),usedEvents=new Set(),picked=[];
   for(const item of candidates){
-    if(picked.length>=6) break;
+    if(picked.length>=5) break;
     const point=item.point,pointKey=dateKey(point.date);
     if(usedDates.has(pointKey)) continue;
     const nearest=state.events
@@ -1735,10 +1761,18 @@ function renderBarometerHistoryModal(){
   }else{
     eventsHost.innerHTML='<div class="history-event-text">Сильные колебания без привязанных событий не выделены.</div>';
   }
+  const chartPoints=[];
+  for(const point of series){
+    const prev=chartPoints.length?chartPoints[chartPoints.length-1]:null;
+    if(prev?.date&&((point.date.getFullYear()-prev.date.getFullYear())*12+point.date.getMonth()-prev.date.getMonth())>1){
+      chartPoints.push({date:null,value:null}); // Не соединяем месяцы без наблюдений.
+    }
+    chartPoints.push(point);
+  }
   const trace={
-    x:series.map(p=>p.date),
-    y:series.map(p=>Number(formatNumber(p.value,3).replace(',','.'))),
-    type:'scatter',mode:'lines',name:'Барометр',
+    x:chartPoints.map(p=>p.date),
+    y:chartPoints.map(p=>p.value===null?null:Number(p.value.toFixed(3))),
+    type:'scatter',mode:'lines',name:'Барометр',connectgaps:false,
     line:{color:'#f04424',width:3.2},
     hovertemplate:'%{x|%d.%m.%Y}<br>Барометр: <b>%{y:.1f}</b><extra></extra>'
   };
@@ -1821,12 +1855,21 @@ async function loadAll(){
     }
 
     let coalitionError=null;
-    const coalitionPromise=fetchFirstAvailableSheet(COALITION_SHEETS,"Коалиции")
-      .then(({sheetName,text})=>{state.coalitionSource=sheetName;return loadCoalitions(parseTable(text,sheetName,true));})
-      .catch(e=>{coalitionError=e;state.coalitionSource="";return [];});
-    const portfolioPromise=fetchText(PORTFOLIOS_URL).then(t=>loadPortfolios(parseTable(t,"Портфели",true))).catch(e=>{console.warn("Портфели:",e);return [];});
-    const [coalitions,portfolios]=await Promise.all([coalitionPromise,portfolioPromise]);
-    state.coalitions=coalitions;state.portfolios=portfolios;
+    try{
+      const {sheetName,rows}=await fetchFirstAvailableCoalitions(COALITION_SHEETS);
+      state.coalitions=rows;
+      state.coalitionHistory=buildCoalitionHistory(rows);
+      state.coalitionSource=sheetName;
+      console.info(`Источник роли правых: ${sheetName}; загружено ${rows.length} записей`);
+    }catch(error){
+      coalitionError=error;
+      state.coalitions=[];
+      state.coalitionHistory=new Map();
+      state.coalitionSource="";
+      console.error("Не удалось загрузить коалиции:",error);
+    }
+    // Загрузка «Портфелей» больше не нужна: месячная роль правых уже закодирована 0–3.
+    state.portfolios=[];
 
     const firstAvailable=COUNTRIES.find(c=>state.allRows.some(r=>r.country===c.key));
     if(!state.selectedCountry||!state.allRows.some(r=>r.country===state.selectedCountry))state.selectedCountry=firstAvailable?.key||state.allRows[0].country;
@@ -1836,15 +1879,14 @@ async function loadAll(){
     if(indexError||coalitionError){
       setBarometerError(indexError||coalitionError);
       state.barometerHistory=[];
+    }else{
+      try{renderBarometer(calculateBarometer());}
+      catch(error){setBarometerError(error);}
+      // История не зависит от того, удалось ли найти два последних соседних месяца.
+      try{state.barometerHistory=calculateBarometerSeries();}
+      catch(historyError){state.barometerHistory=[];console.warn("История барометра:",historyError);}
     }
-    else{
-      try{
-        renderBarometer(calculateBarometer());
-        try{state.barometerHistory=calculateBarometerSeries();}
-        catch(historyError){state.barometerHistory=[];console.warn("История барометра:",historyError);}
-      }
-      catch(error){setBarometerError(error);state.barometerHistory=[];}
-    }
+    if(!$("historyModal").hidden)renderBarometerHistoryModal();
     state.lastSuccessfulLoad=new Date();
     $("updatedAt").textContent="Дата обновления: "+formatDate(state.lastSuccessfulLoad,true);
     if(state.dataWarnings.length)console.warn("Предупреждения в данных:",state.dataWarnings);
